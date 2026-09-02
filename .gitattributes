@@ -1,0 +1,18 @@
+# Chuẩn hoá xuống dòng: repo luôn lưu LF, kể cả khi làm việc trên Windows.
+# Thiếu file này, Windows với core.autocrlf=true sẽ báo "modified" hàng loạt
+# ngay sau khi clone, và diff giữa hai máy sẽ đầy thay đổi giả.
+* text=auto eol=lf
+
+# File nhị phân: tuyệt đối không đụng vào nội dung
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.ico  binary
+*.pdf  binary
+*.woff binary
+*.woff2 binary
+
+# Ẩn khỏi diff review và khỏi thống kê ngôn ngữ của GitHub
+pnpm-lock.yaml -diff linguist-generated

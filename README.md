@@ -1,0 +1,128 @@
+# E-Commerce Platform
+
+Nền tảng thương mại điện tử full-stack, xây theo hướng production-ready: phân tầng rõ ràng ở backend, kiểu dữ liệu dùng chung giữa hai đầu, đa ngôn ngữ EN/VI, và kiểm thử tự động.
+
+> **Trạng thái:** Phase 0/11 — bộ khung monorepo. Xem [lộ trình đầy đủ](#lộ-trình) bên dưới.
+
+---
+
+## Tech stack
+
+| Lớp             | Công nghệ                                                              |
+| --------------- | ---------------------------------------------------------------------- |
+| Frontend        | React 18, Vite, TypeScript, Tailwind CSS, TanStack Query, React Router |
+| Form & validate | React Hook Form + Zod (schema dùng chung với backend)                  |
+| Backend         | Node.js, Express, TypeScript                                           |
+| Database        | PostgreSQL 16 + Prisma ORM                                             |
+| Auth            | JWT access token + refresh token rotation (HTTPOnly cookie), RBAC      |
+| Lưu trữ ảnh     | Cloudinary                                                             |
+| Thanh toán      | COD + mock gateway có webhook                                          |
+| Kiểm thử        | Jest, Supertest                                                        |
+| Tài liệu API    | Swagger / OpenAPI                                                      |
+| Hạ tầng dev     | pnpm workspace, Docker Compose                                         |
+
+## Cấu trúc thư mục
+
+```
+.
+├── apps/
+│   ├── api/                    # Backend REST API
+│   │   └── src/
+│   │       ├── config/         # env, database, hằng số ứng dụng
+│   │       ├── common/         # dùng chung: errors, middleware, utils, logger
+│   │       └── domains/        # mỗi nghiệp vụ một thư mục
+│   │           └── health/     #   routes → controller → service → repository
+│   └── web/                    # Frontend React
+│       └── src/
+├── packages/
+│   └── shared/                 # types, enums, Zod schema dùng chung FE ↔ BE
+├── docs/                       # ERD, ghi chú thiết kế
+├── docker-compose.yml          # PostgreSQL + pgAdmin cho môi trường dev
+└── tsconfig.base.json          # cấu hình TypeScript gốc
+```
+
+**Nguyên tắc phân tầng backend — một chiều, không được đi tắt:**
+
+```
+routes → controller → service → repository → database
+```
+
+- `controller` đọc request, gọi đúng một service, gói response. Không có nghiệp vụ, không truy vấn DB.
+- `service` chứa toàn bộ business logic. Không bao giờ chạm vào `req` / `res`.
+- `repository` là nơi duy nhất nói chuyện với database.
+
+## Yêu cầu môi trường
+
+- Node.js >= 20.11
+- pnpm >= 9 (`npm install -g pnpm` hoặc `corepack enable pnpm`)
+- Docker Desktop (để chạy PostgreSQL)
+
+## Cài đặt
+
+```bash
+# 1. Cài dependencies cho toàn bộ workspace
+pnpm install
+
+# 2. Tạo file môi trường
+cp .env.example .env
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env
+
+# 3. Dựng PostgreSQL + pgAdmin
+pnpm db:up
+
+# 4. Chạy song song frontend và backend
+pnpm dev
+```
+
+| Dịch vụ     | Địa chỉ                             |
+| ----------- | ----------------------------------- |
+| Frontend    | http://localhost:5173               |
+| Backend API | http://localhost:8080/api/v1        |
+| Healthcheck | http://localhost:8080/api/v1/health |
+| pgAdmin     | http://localhost:5050               |
+
+## Script
+
+| Lệnh                     | Tác dụng                         |
+| ------------------------ | -------------------------------- |
+| `pnpm dev`               | Chạy song song api và web        |
+| `pnpm dev:api`           | Chỉ chạy backend                 |
+| `pnpm dev:web`           | Chỉ chạy frontend                |
+| `pnpm build`             | Build toàn bộ workspace          |
+| `pnpm typecheck`         | Kiểm tra kiểu toàn bộ workspace  |
+| `pnpm lint`              | ESLint, không chấp nhận warning  |
+| `pnpm format`            | Prettier ghi đè toàn bộ file     |
+| `pnpm db:up` / `db:down` | Bật / tắt PostgreSQL bằng Docker |
+
+## Quy ước commit
+
+Dự án dùng [Conventional Commits](https://www.conventionalcommits.org/), được `commitlint` kiểm tra tự động qua Git hook.
+
+```
+<type>(<scope>): <mô tả>
+
+type : feat | fix | chore | docs | style | refactor | perf | test | build | ci | revert
+scope: api | web | shared | db | auth | catalog | cart | order | admin | infra | deps
+```
+
+## Lộ trình
+
+| Phase | Nội dung                                         | Trạng thái |
+| ----- | ------------------------------------------------ | ---------- |
+| 0     | Monorepo, Docker, hàng rào chất lượng code       | ✅ xong    |
+| 1     | Thiết kế database, Prisma schema, seed           | ⏳         |
+| 2     | Kernel backend: BaseRepository, AppError, logger | ⏳         |
+| 3     | Auth, refresh token rotation, RBAC               | ⏳         |
+| 4     | API catalog, upload ảnh, full-text search        | ⏳         |
+| 5     | Bộ khung frontend, design tokens, i18n           | ⏳         |
+| 6     | Hành trình khách vãng lai                        | ⏳         |
+| 7     | Auth frontend, hợp nhất giỏ hàng, hồ sơ          | ⏳         |
+| 8     | Checkout, coupon, transaction đặt hàng           | ⏳         |
+| 9     | Lịch sử đơn, huỷ đơn, đánh giá                   | ⏳         |
+| 10    | Khu vực Staff và Admin                           | ⏳         |
+| 11    | Kiểm thử, tài liệu, CI/CD, deploy                | ⏳         |
+
+## Giấy phép
+
+Dự án cá nhân phục vụ mục đích học tập và trình bày năng lực.
