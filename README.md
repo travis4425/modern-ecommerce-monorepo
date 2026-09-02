@@ -84,12 +84,12 @@ pnpm dev
 
 Mật khẩu chung: `Password@123`
 
-| Email               | Vai trò | Ghi chú                           |
-| ------------------- | ------- | --------------------------------- |
-| `admin@ecom.local`  | ADMIN   | Toàn bộ 25 quyền                  |
-| `staff@ecom.local`  | STAFF   | 10 quyền vận hành đơn hàng và kho |
-| `khach1@ecom.local` | USER    | Đã xác thực email, có 2 địa chỉ   |
-| `khach2@ecom.local` | USER    | Chưa xác thực email               |
+| Email                | Vai trò | Ghi chú                           |
+| -------------------- | ------- | --------------------------------- |
+| `admin@example.com`  | ADMIN   | Toàn bộ 25 quyền                  |
+| `staff@example.com`  | STAFF   | 10 quyền vận hành đơn hàng và kho |
+| `khach1@example.com` | USER    | Đã xác thực email, có 2 địa chỉ   |
+| `khach2@example.com` | USER    | Chưa xác thực email               |
 
 | Dịch vụ     | Địa chỉ                             |
 | ----------- | ----------------------------------- |

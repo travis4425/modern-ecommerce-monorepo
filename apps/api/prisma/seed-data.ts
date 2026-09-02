@@ -1,4 +1,12 @@
-/** Dữ liệu mẫu cho cửa hàng điện tử & phụ kiện. Tách riêng để seed.ts chỉ lo phần logic. */
+/**
+ * Dữ liệu mẫu cho cửa hàng điện tử & phụ kiện. Tách riêng để seed.ts chỉ lo phần logic.
+ *
+ * Lưu ý về tên miền email: mọi tài khoản mẫu dùng @example.com, là tên miền được
+ * RFC 2606 dành riêng cho tài liệu và ví dụ. KHÔNG dùng .local, .test hay
+ * .localhost — đó là các TLD dành riêng cho mục đích đặc biệt, bị pgAdmin và
+ * phần lớn dịch vụ SMTP từ chối, nên luồng gửi email ở Phase 3 sẽ không chạy.
+ * Cũng không dùng tên miền có thật, vì email thử nghiệm có thể bay tới người lạ.
+ */
 
 export const PERMISSIONS: Array<[string, string]> = [
   ['user:read', 'Xem danh sách và chi tiết người dùng'],

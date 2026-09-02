@@ -27,7 +27,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@ecom.local}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
       # pgAdmin 8 trở lên bắt buộc mật khẩu tối thiểu 6 ký tự. Đặt 'admin' như
       # trước đây khiến container thoát ngay với mã 1 và rơi vào vòng restart.
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}

@@ -109,7 +109,7 @@ async function main(): Promise<void> {
   const [, , customer1, customer2] = await Promise.all([
     prisma.user.create({
       data: {
-        email: 'admin@ecom.local',
+        email: 'admin@example.com',
         passwordHash,
         fullName: 'Quản trị viên',
         phone: '0900000001',
@@ -119,7 +119,7 @@ async function main(): Promise<void> {
     }),
     prisma.user.create({
       data: {
-        email: 'staff@ecom.local',
+        email: 'staff@example.com',
         passwordHash,
         fullName: 'Nhân viên vận hành',
         phone: '0900000002',
@@ -129,7 +129,7 @@ async function main(): Promise<void> {
     }),
     prisma.user.create({
       data: {
-        email: 'khach1@ecom.local',
+        email: 'khach1@example.com',
         passwordHash,
         fullName: 'Nguyễn Văn An',
         phone: '0912345678',
@@ -139,7 +139,7 @@ async function main(): Promise<void> {
     }),
     prisma.user.create({
       data: {
-        email: 'khach2@ecom.local',
+        email: 'khach2@example.com',
         passwordHash,
         fullName: 'Trần Thị Bình',
         phone: '0987654321',
@@ -294,10 +294,10 @@ async function main(): Promise<void> {
     Mã giảm giá        ${coupons}
 
   Tài khoản mẫu (mật khẩu chung: ${DEMO_PASSWORD})
-    admin@ecom.local   ADMIN
-    staff@ecom.local   STAFF
-    khach1@ecom.local  USER — đã xác thực email, có 2 địa chỉ
-    khach2@ecom.local  USER — chưa xác thực email
+    admin@example.com    ADMIN
+    staff@example.com    STAFF
+    khach1@example.com   USER — đã xác thực email, có 2 địa chỉ
+    khach2@example.com   USER — chưa xác thực email
 `);
 }
 
