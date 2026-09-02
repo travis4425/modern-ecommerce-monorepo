@@ -7,11 +7,11 @@ type Probe =
   | { phase: 'unreachable'; reason: string };
 
 /**
- * Trang kiểm chứng của Phase 0.
+ * Trang kiểm chứng hạ tầng.
  *
- * Mục đích duy nhất: chứng minh ba mắt xích đã nối thông — web gọi được api,
- * api nói chuyện được với database, và cả hai dùng chung kiểu dữ liệu từ
- * packages/shared. Phase 5 sẽ thay trang này bằng bộ khung giao diện thật.
+ * Chứng minh cả chuỗi đã nối thông: web gọi được api, api đi qua Prisma tới
+ * PostgreSQL, migration và seed đã chạy, và hai đầu dùng chung kiểu dữ liệu
+ * từ packages/shared. Phase 5 sẽ thay trang này bằng bộ khung giao diện thật.
  */
 export default function App() {
   const [probe, setProbe] = useState<Probe>({ phase: 'loading' });
@@ -40,16 +40,17 @@ export default function App() {
 
   const apiUp = probe.phase === 'ready';
   const dbUp = probe.phase === 'ready' && probe.data.database.connected;
+  const seeded = probe.phase === 'ready' && (probe.data.catalog?.products ?? 0) > 0;
   const dbError = probe.phase === 'ready' ? probe.data.database.error : null;
 
   const dotState = (up: boolean) => (up ? 'ok' : probe.phase === 'loading' ? '' : 'fail');
 
   return (
     <main className="shell">
-      <p className="eyebrow">Phase 0 · Nền móng</p>
+      <p className="eyebrow">Phase 1 · Database</p>
       <h1>E-Commerce Platform</h1>
       <p className="subtitle">
-        Bộ khung monorepo đã dựng xong. Trang này kiểm tra ba mắt xích của hệ thống.
+        Schema và dữ liệu mẫu đã sẵn sàng. Trang này kiểm tra từng mắt xích của hệ thống.
       </p>
 
       <div className="card">
@@ -78,6 +79,19 @@ export default function App() {
               (probe.data.database.connected
                 ? `${probe.data.database.latencyMs} ms`
                 : 'chưa kết nối')}
+            {probe.phase === 'unreachable' && '—'}
+          </span>
+        </div>
+
+        <div className="row">
+          <span className={`dot ${seeded ? 'ok' : probe.phase === 'loading' ? '' : 'fail'}`} />
+          <span className="label">Dữ liệu mẫu</span>
+          <span className="value">
+            {probe.phase === 'loading' && 'đang kiểm tra…'}
+            {probe.phase === 'ready' &&
+              (probe.data.catalog
+                ? `${probe.data.catalog.categories} danh mục · ${probe.data.catalog.products} sản phẩm`
+                : 'chưa seed')}
             {probe.phase === 'unreachable' && '—'}
           </span>
         </div>

@@ -32,5 +32,6 @@ Thumbs.db
 # docker volume dữ liệu local
 .docker-data/
 
-# prisma
+# prisma — client được sinh lại bằng `pnpm db:generate` (postinstall tự chạy)
+apps/api/src/generated/
 apps/api/prisma/*.db

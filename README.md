@@ -2,7 +2,7 @@
 
 Nền tảng thương mại điện tử full-stack, xây theo hướng production-ready: phân tầng rõ ràng ở backend, kiểu dữ liệu dùng chung giữa hai đầu, đa ngôn ngữ EN/VI, và kiểm thử tự động.
 
-> **Trạng thái:** Phase 0/11 — bộ khung monorepo. Xem [lộ trình đầy đủ](#lộ-trình) bên dưới.
+> **Trạng thái:** Phase 1/11 — schema 23 bảng và dữ liệu mẫu đã sẵn sàng. Xem [lộ trình đầy đủ](#lộ-trình) bên dưới.
 
 ---
 
@@ -13,7 +13,7 @@ Nền tảng thương mại điện tử full-stack, xây theo hướng producti
 | Frontend        | React 18, Vite, TypeScript, Tailwind CSS, TanStack Query, React Router |
 | Form & validate | React Hook Form + Zod (schema dùng chung với backend)                  |
 | Backend         | Node.js, Express, TypeScript                                           |
-| Database        | PostgreSQL 16 + Prisma ORM                                             |
+| Database        | PostgreSQL 16 + Prisma ORM 7 (driver adapter @prisma/adapter-pg)       |
 | Auth            | JWT access token + refresh token rotation (HTTPOnly cookie), RBAC      |
 | Lưu trữ ảnh     | Cloudinary                                                             |
 | Thanh toán      | COD + mock gateway có webhook                                          |
@@ -36,7 +36,8 @@ Nền tảng thương mại điện tử full-stack, xây theo hướng producti
 │       └── src/
 ├── packages/
 │   └── shared/                 # types, enums, Zod schema dùng chung FE ↔ BE
-├── docs/                       # ERD, ghi chú thiết kế
+│   │   └── prisma/             # schema.prisma, migrations, seed
+├── docs/                       # ERD (docs/ERD.md), ghi chú thiết kế
 ├── docker-compose.yml          # PostgreSQL + pgAdmin cho môi trường dev
 └── tsconfig.base.json          # cấu hình TypeScript gốc
 ```
@@ -71,9 +72,24 @@ cp apps/web/.env.example apps/web/.env
 # 3. Dựng PostgreSQL + pgAdmin
 pnpm db:up
 
-# 4. Chạy song song frontend và backend
+# 4. Tạo bảng và nạp dữ liệu mẫu
+pnpm db:migrate      # sinh migration đầu tiên rồi áp dụng
+pnpm db:seed         # 18 danh mục, 38 sản phẩm, 5 mã giảm giá, 4 tài khoản
+
+# 5. Chạy song song frontend và backend
 pnpm dev
 ```
+
+### Tài khoản mẫu
+
+Mật khẩu chung: `Password@123`
+
+| Email               | Vai trò | Ghi chú                           |
+| ------------------- | ------- | --------------------------------- |
+| `admin@ecom.local`  | ADMIN   | Toàn bộ 25 quyền                  |
+| `staff@ecom.local`  | STAFF   | 10 quyền vận hành đơn hàng và kho |
+| `khach1@ecom.local` | USER    | Đã xác thực email, có 2 địa chỉ   |
+| `khach2@ecom.local` | USER    | Chưa xác thực email               |
 
 | Dịch vụ     | Địa chỉ                             |
 | ----------- | ----------------------------------- |
@@ -84,16 +100,21 @@ pnpm dev
 
 ## Script
 
-| Lệnh                     | Tác dụng                         |
-| ------------------------ | -------------------------------- |
-| `pnpm dev`               | Chạy song song api và web        |
-| `pnpm dev:api`           | Chỉ chạy backend                 |
-| `pnpm dev:web`           | Chỉ chạy frontend                |
-| `pnpm build`             | Build toàn bộ workspace          |
-| `pnpm typecheck`         | Kiểm tra kiểu toàn bộ workspace  |
-| `pnpm lint`              | ESLint, không chấp nhận warning  |
-| `pnpm format`            | Prettier ghi đè toàn bộ file     |
-| `pnpm db:up` / `db:down` | Bật / tắt PostgreSQL bằng Docker |
+| Lệnh                     | Tác dụng                             |
+| ------------------------ | ------------------------------------ |
+| `pnpm dev`               | Chạy song song api và web            |
+| `pnpm dev:api`           | Chỉ chạy backend                     |
+| `pnpm dev:web`           | Chỉ chạy frontend                    |
+| `pnpm build`             | Build toàn bộ workspace              |
+| `pnpm typecheck`         | Kiểm tra kiểu toàn bộ workspace      |
+| `pnpm lint`              | ESLint, không chấp nhận warning      |
+| `pnpm format`            | Prettier ghi đè toàn bộ file         |
+| `pnpm db:up` / `db:down` | Bật / tắt PostgreSQL bằng Docker     |
+| `pnpm db:migrate`        | Tạo và áp dụng migration             |
+| `pnpm db:seed`           | Nạp dữ liệu mẫu                      |
+| `pnpm db:reset`          | Xoá sạch, chạy lại migration và seed |
+| `pnpm db:studio`         | Mở Prisma Studio để xem dữ liệu      |
+| `pnpm db:generate`       | Sinh lại Prisma Client               |
 
 ## Quy ước commit
 
@@ -111,7 +132,7 @@ scope: api | web | shared | db | auth | catalog | cart | order | admin | infra |
 | Phase | Nội dung                                         | Trạng thái |
 | ----- | ------------------------------------------------ | ---------- |
 | 0     | Monorepo, Docker, hàng rào chất lượng code       | ✅ xong    |
-| 1     | Thiết kế database, Prisma schema, seed           | ⏳         |
+| 1     | Thiết kế database, Prisma schema, seed           | ✅ xong    |
 | 2     | Kernel backend: BaseRepository, AppError, logger | ⏳         |
 | 3     | Auth, refresh token rotation, RBAC               | ⏳         |
 | 4     | API catalog, upload ảnh, full-text search        | ⏳         |

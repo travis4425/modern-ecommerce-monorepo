@@ -28,12 +28,20 @@ services:
         condition: service_healthy
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@ecom.local}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      # pgAdmin 8 trở lên bắt buộc mật khẩu tối thiểu 6 ký tự. Đặt 'admin' như
+      # trước đây khiến container thoát ngay với mã 1 và rơi vào vòng restart.
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
       PGADMIN_CONFIG_SERVER_MODE: 'False'
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
     ports:
       - '${PGADMIN_PORT:-5050}:80'
+    volumes:
+      # Không có volume thì cấu hình server đã khai báo sẽ mất mỗi lần dựng lại
+      # container, và pgAdmin cần thư mục này ghi được để khởi động.
+      - pgadmin_data:/var/lib/pgadmin
 
 volumes:
   postgres_data:
     name: ecom_postgres_data
+  pgadmin_data:
+    name: ecom_pgadmin_data

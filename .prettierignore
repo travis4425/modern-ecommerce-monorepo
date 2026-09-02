@@ -4,3 +4,4 @@ build
 coverage
 pnpm-lock.yaml
 .docker-data
+apps/api/src/generated

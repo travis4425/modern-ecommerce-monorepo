@@ -22,7 +22,12 @@
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "db:logs": "docker compose logs -f postgres",
-    "prepare": "husky"
+    "prepare": "husky",
+    "db:migrate": "pnpm --filter @ecom/api db:migrate",
+    "db:seed": "pnpm --filter @ecom/api db:seed",
+    "db:reset": "pnpm --filter @ecom/api db:reset",
+    "db:generate": "pnpm --filter @ecom/api db:generate",
+    "db:studio": "pnpm --filter @ecom/api db:studio"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

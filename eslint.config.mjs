@@ -6,6 +6,8 @@ import prettier from 'eslint-config-prettier';
 export default tseslint.config(
   {
     ignores: [
+      // Prisma Client sinh tự động — không phải mã ta viết, không lint
+      '**/src/generated/**',
       '**/dist/**',
       '**/build/**',
       '**/coverage/**',
@@ -58,7 +60,7 @@ export default tseslint.config(
 
   // File cấu hình được phép dùng console
   {
-    files: ['**/*.config.{ts,mts,mjs,cjs}', '**/scripts/**/*.ts'],
+    files: ['**/*.config.{ts,mts,mjs,cjs}', '**/scripts/**/*.ts', '**/prisma/*.ts'],
     rules: { 'no-console': 'off' },
   },
 

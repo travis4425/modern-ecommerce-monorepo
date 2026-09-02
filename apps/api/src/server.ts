@@ -2,6 +2,7 @@ import type { Server } from 'node:http';
 import { createApp } from './app';
 import { env, describeDatabaseTarget } from './config/env';
 import { closeDatabase } from './config/database';
+import { disconnectPrisma } from './config/prisma';
 import { APP_NAME, APP_VERSION } from './config/app-info';
 
 const app = createApp();
@@ -26,6 +27,7 @@ async function shutdown(signal: string): Promise<void> {
 
   server.close(async () => {
     try {
+      await disconnectPrisma();
       await closeDatabase();
       console.warn('[shutdown] Đã đóng server và database.');
       process.exit(0);
