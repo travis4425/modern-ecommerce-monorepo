@@ -61,6 +61,37 @@ routes → controller → service → repository → database
 - Kiểu và schema dùng chung đặt ở `packages/shared`, không khai báo lặp hai đầu.
 - Không ném chuỗi hay object trần. Luôn ném lớp kế thừa `AppError`.
 
+## Thêm một resource mới — theo đúng thứ tự này
+
+Kernel ở `src/common/` đã lo phần lặp lại. Một resource mới chỉ cần sáu file trong
+`src/domains/<tên>/`, viết theo thứ tự:
+
+1. `*.types.ts` — hình dạng dữ liệu repository trả về và DTO của request. Đây là hợp
+   đồng, viết trước tiên. Dùng kiểu của chúng ta, không dùng kiểu model sinh tự động
+   của Prisma, để tầng trên không phụ thuộc vào cột mà truy vấn không hề lấy về.
+2. `*.repository.ts` — kế thừa `BaseRepository`, một lần ép kiểu delegate ở constructor.
+   Chỉ chứa truy vấn, không chứa nghiệp vụ.
+3. `*.service.ts` — toàn bộ business logic. Không chạm `req`/`res`. Ném `AppError`.
+4. `*.controller.ts` — đọc request đã validate, gọi đúng một service, gọi `sendSuccess`.
+5. `*.validator.ts` — schema Zod cho body/query/params.
+6. `*.routes.ts` — nối `validate(...)` + `asyncHandler(controller)`.
+
+Rồi đăng ký router trong `app.ts` và bổ sung endpoint vào `src/docs/openapi.ts`.
+
+Mã lỗi mới phải thêm vào `packages/shared/src/constants/error-codes.ts` TRƯỚC khi dùng.
+
+## Bẫy đã gặp, đừng lặp lại
+
+- **Prisma 7 không tự chạy seed** sau `migrate dev` hay `migrate reset`. Mọi script
+  reset phải nối `&& prisma db seed` tường minh, nếu không database sẽ rỗng mà
+  không có thông báo lỗi nào.
+- **Không dùng TLD `.local` / `.test` / `.localhost`** cho email: pgAdmin và phần
+  lớn dịch vụ SMTP từ chối. Dùng `@example.com` (RFC 2606).
+- **`dotenv` không ghi đè biến môi trường đã tồn tại.** Ở dev phải bật `override`,
+  nếu không một `DATABASE_URL` sót lại ở cấp máy sẽ âm thầm chiếm chỗ.
+- **`z.coerce.boolean()` coi chuỗi `'false'` là `true`.** Tham số boolean trên query
+  string phải dùng `z.enum(['true','false'])` rồi transform.
+
 ## Quy trình làm việc
 
 Làm từng phase một. Kết thúc mỗi phase thì dừng lại, báo cáo, chờ người dùng kiểm tra trên localhost, chụp ảnh màn hình và commit. Chỉ đi tiếp khi người dùng xác nhận.

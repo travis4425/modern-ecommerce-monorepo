@@ -2,7 +2,7 @@
 
 Nền tảng thương mại điện tử full-stack, xây theo hướng production-ready: phân tầng rõ ràng ở backend, kiểu dữ liệu dùng chung giữa hai đầu, đa ngôn ngữ EN/VI, và kiểm thử tự động.
 
-> **Trạng thái:** Phase 1/11 — schema 23 bảng và dữ liệu mẫu đã sẵn sàng. Xem [lộ trình đầy đủ](#lộ-trình) bên dưới.
+> **Trạng thái:** Phase 2/11 — kernel backend đã xong, resource mới chỉ tốn vài chục dòng. Xem [lộ trình đầy đủ](#lộ-trình) bên dưới.
 
 ---
 
@@ -91,12 +91,13 @@ Mật khẩu chung: `Password@123`
 | `khach1@example.com` | USER    | Đã xác thực email, có 2 địa chỉ   |
 | `khach2@example.com` | USER    | Chưa xác thực email               |
 
-| Dịch vụ     | Địa chỉ                             |
-| ----------- | ----------------------------------- |
-| Frontend    | http://localhost:5173               |
-| Backend API | http://localhost:8080/api/v1        |
-| Healthcheck | http://localhost:8080/api/v1/health |
-| pgAdmin     | http://localhost:5050               |
+| Dịch vụ      | Địa chỉ                             |
+| ------------ | ----------------------------------- |
+| Frontend     | http://localhost:5173               |
+| Backend API  | http://localhost:8080/api/v1        |
+| Healthcheck  | http://localhost:8080/api/v1/health |
+| Tài liệu API | http://localhost:8080/api/docs      |
+| pgAdmin      | http://localhost:5050               |
 
 ## Script
 
@@ -116,6 +117,34 @@ Mật khẩu chung: `Password@123`
 | `pnpm db:studio`         | Mở Prisma Studio để xem dữ liệu      |
 | `pnpm db:generate`       | Sinh lại Prisma Client               |
 
+## Quy ước API
+
+**Envelope.** Mọi endpoint trả về cùng một hình dạng:
+
+```jsonc
+// thành công
+{ "success": true, "data": { }, "meta": { } }   // meta chỉ có ở endpoint danh sách
+
+// thất bại
+{ "success": false, "error": { "code": "PRODUCT_NOT_FOUND", "message": "...", "details": [] } }
+```
+
+**Mã lỗi.** `error.code` là hợp đồng công khai, định nghĩa tập trung tại
+`packages/shared/src/constants/error-codes.ts`. Frontend tra `errors.<MÃ>` trong file i18n
+để hiển thị. Trường `error.message` chỉ dành cho developer đọc log — không bao giờ
+hiển thị thẳng cho người dùng. Mã đã phát hành thì không đổi và không xoá.
+
+**Truy vết.** Mọi response đều kèm header `x-request-id`. Mã này xuất hiện trong mọi
+dòng log của request đó, kể cả log viết từ sâu trong tầng service. Người dùng báo lỗi
+kèm mã này là tra ra ngay toàn bộ dấu vết.
+
+**Phân trang.** `?page=1&limit=20&sort=-created_at`. `limit` bị ép về tối đa 100.
+`sort` chỉ chấp nhận các cột nằm trong danh sách trắng của từng endpoint.
+
+**Xử lý lỗi.** Không bao giờ `throw` chuỗi hay object trần — luôn ném một lớp kế thừa
+`AppError`. Mọi handler bất đồng bộ phải bọc trong `asyncHandler`, nếu không promise bị
+reject sẽ làm request treo tới khi timeout mà không để lại dòng log nào.
+
 ## Quy ước commit
 
 Dự án dùng [Conventional Commits](https://www.conventionalcommits.org/), được `commitlint` kiểm tra tự động qua Git hook.
@@ -133,7 +162,7 @@ scope: api | web | shared | db | auth | catalog | cart | order | admin | infra |
 | ----- | ------------------------------------------------ | ---------- |
 | 0     | Monorepo, Docker, hàng rào chất lượng code       | ✅ xong    |
 | 1     | Thiết kế database, Prisma schema, seed           | ✅ xong    |
-| 2     | Kernel backend: BaseRepository, AppError, logger | ⏳         |
+| 2     | Kernel backend: BaseRepository, AppError, logger | ✅ xong    |
 | 3     | Auth, refresh token rotation, RBAC               | ⏳         |
 | 4     | API catalog, upload ảnh, full-text search        | ⏳         |
 | 5     | Bộ khung frontend, design tokens, i18n           | ⏳         |

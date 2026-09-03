@@ -28,6 +28,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(8080),
   DATABASE_URL: z.string().url('DATABASE_URL phải là chuỗi kết nối PostgreSQL hợp lệ'),
+  LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('debug'),
   WEB_ORIGIN: z
     .string()
     .default('http://localhost:5173')
