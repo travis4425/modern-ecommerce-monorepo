@@ -1,6 +1,7 @@
 import express, { type Express } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import swaggerUi from 'swagger-ui-express';
 import { API_PREFIX } from '@ecom/shared';
 import { env, isProduction } from './config/env';
@@ -11,6 +12,7 @@ import { errorHandlerMiddleware } from './common/middleware/error-handler.middle
 import { openApiDocument } from './docs/openapi';
 import healthRoutes from './domains/health/health.routes';
 import categoryRoutes from './domains/categories/category.routes';
+import authRoutes from './domains/auth/auth.routes';
 
 /**
  * Lắp ráp ứng dụng Express.
@@ -40,6 +42,9 @@ export function createApp(): Express {
   app.use(cors({ origin: env.WEB_ORIGIN, credentials: true }));
   app.use(globalRateLimiter);
 
+  // Phải đứng trước mọi route đọc cookie — refresh token đi bằng cookie HTTPOnly.
+  app.use(cookieParser());
+
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
@@ -49,6 +54,19 @@ export function createApp(): Express {
   if (!isProduction) {
     app.use(
       '/api/docs',
+      // Swagger UI khởi tạo bằng script inline, nên CSP mặc định của helmet
+      // (script-src 'self', không có 'unsafe-inline') sẽ chặn và để lại trang
+      // trắng. Nới đúng một chỗ này thay vì nới toàn cục — mọi endpoint API
+      // khác vẫn giữ nguyên CSP nghiêm ngặt. Khối này chỉ chạy ngoài production.
+      helmet({
+        contentSecurityPolicy: {
+          directives: {
+            ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+            'script-src': ["'self'", "'unsafe-inline'"],
+            'img-src': ["'self'", 'data:', 'https:'],
+          },
+        },
+      }),
       swaggerUi.serve,
       swaggerUi.setup(openApiDocument, {
         customSiteTitle: 'E-Commerce API',
@@ -62,6 +80,7 @@ export function createApp(): Express {
 
   // ── Routes ────────────────────────────────────────────────
   app.use(API_PREFIX, healthRoutes);
+  app.use(API_PREFIX, authRoutes);
   app.use(API_PREFIX, categoryRoutes);
 
   // ── Kết thúc chuỗi ────────────────────────────────────────

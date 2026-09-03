@@ -30,6 +30,30 @@ export const ERROR_CODES = {
   /** Prisma không tìm thấy bản ghi cần thao tác. */
   RECORD_NOT_FOUND: 'RECORD_NOT_FOUND',
 
+  // ── Xác thực ────────────────────────────────────────────────────────────
+  /** Sai email hoặc sai mật khẩu. Cố ý KHÔNG phân biệt hai trường hợp. */
+  AUTH_INVALID_CREDENTIALS: 'AUTH_INVALID_CREDENTIALS',
+  AUTH_EMAIL_ALREADY_EXISTS: 'AUTH_EMAIL_ALREADY_EXISTS',
+  AUTH_ACCOUNT_DISABLED: 'AUTH_ACCOUNT_DISABLED',
+  /** Không gửi kèm access token, hoặc header Authorization sai định dạng. */
+  AUTH_TOKEN_MISSING: 'AUTH_TOKEN_MISSING',
+  /** Chữ ký sai, token bị sửa, hoặc sai loại token. */
+  AUTH_TOKEN_INVALID: 'AUTH_TOKEN_INVALID',
+  AUTH_TOKEN_EXPIRED: 'AUTH_TOKEN_EXPIRED',
+  AUTH_REFRESH_TOKEN_MISSING: 'AUTH_REFRESH_TOKEN_MISSING',
+  AUTH_REFRESH_TOKEN_INVALID: 'AUTH_REFRESH_TOKEN_INVALID',
+  AUTH_REFRESH_TOKEN_EXPIRED: 'AUTH_REFRESH_TOKEN_EXPIRED',
+  /**
+   * Một refresh token đã bị thu hồi lại được dùng lần nữa. Dấu hiệu token bị
+   * đánh cắp: toàn bộ phiên của người dùng đó đã bị thu hồi.
+   */
+  AUTH_REFRESH_TOKEN_REUSED: 'AUTH_REFRESH_TOKEN_REUSED',
+  /** Token đặt lại mật khẩu không tồn tại, đã dùng, hoặc đã hết hạn. */
+  AUTH_RESET_TOKEN_INVALID: 'AUTH_RESET_TOKEN_INVALID',
+  AUTH_RESET_TOKEN_EXPIRED: 'AUTH_RESET_TOKEN_EXPIRED',
+  /** Đã đăng nhập nhưng không đủ quyền cho hành động này. */
+  AUTH_INSUFFICIENT_PERMISSION: 'AUTH_INSUFFICIENT_PERMISSION',
+
   // ── Catalog ─────────────────────────────────────────────────────────────
   CATEGORY_NOT_FOUND: 'CATEGORY_NOT_FOUND',
   PRODUCT_NOT_FOUND: 'PRODUCT_NOT_FOUND',

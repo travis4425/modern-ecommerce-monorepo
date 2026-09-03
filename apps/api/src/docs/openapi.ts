@@ -68,6 +68,7 @@ export const openApiDocument = {
   servers: [{ url: API_PREFIX, description: 'Máy chủ hiện tại' }],
   tags: [
     { name: 'Health', description: 'Kiểm tra tình trạng hệ thống' },
+    { name: 'Auth', description: 'Đăng ký, đăng nhập, làm mới token' },
     { name: 'Catalog', description: 'Danh mục và sản phẩm' },
   ],
   paths: {
@@ -81,6 +82,118 @@ export const openApiDocument = {
         responses: {
           200: { description: 'Hệ thống bình thường' },
           503: { description: 'Suy giảm — không kết nối được database' },
+        },
+      },
+    },
+    '/auth/register': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Đăng ký tài khoản khách hàng',
+        description:
+          'Trả access token trong body và đặt refresh token vào cookie HTTPOnly. ' +
+          'Giới hạn 10 request / 15 phút theo IP.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['email', 'password', 'fullName'],
+                properties: {
+                  email: { type: 'string', format: 'email', example: 'travis@example.com' },
+                  password: {
+                    type: 'string',
+                    minLength: 8,
+                    maxLength: 72,
+                    description: 'Tối thiểu 8 ký tự, có chữ thường, chữ hoa và chữ số.',
+                    example: 'Password@123',
+                  },
+                  fullName: { type: 'string', example: 'Nguyễn Quốc Khánh' },
+                  phone: { type: 'string', pattern: '^0\\d{9}$', example: '0912345678' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: 'Tạo tài khoản thành công' },
+          409: { description: 'AUTH_EMAIL_ALREADY_EXISTS' },
+          422: { description: 'VALIDATION_FAILED' },
+          429: { description: 'RATE_LIMIT_EXCEEDED' },
+        },
+      },
+    },
+    '/auth/login': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Đăng nhập',
+        description:
+          'Sai email và sai mật khẩu trả về CÙNG một mã lỗi, và tốn cùng lượng thời gian, ' +
+          'để không lộ email nào đã đăng ký.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['email', 'password'],
+                properties: {
+                  email: { type: 'string', example: 'admin@example.com' },
+                  password: { type: 'string', example: 'Password@123' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Đăng nhập thành công' },
+          401: { description: 'AUTH_INVALID_CREDENTIALS' },
+          403: { description: 'AUTH_ACCOUNT_DISABLED' },
+          429: { description: 'RATE_LIMIT_EXCEEDED' },
+        },
+      },
+    },
+    '/auth/refresh': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Làm mới access token (có xoay refresh token)',
+        description:
+          'Đọc refresh token từ cookie, cấp cặp mới và thu hồi cái cũ. ' +
+          'Nếu một token ĐÃ thu hồi được dùng lại, toàn bộ family bị thu hồi và trả về ' +
+          'AUTH_REFRESH_TOKEN_REUSED — đó là cơ chế phát hiện token bị đánh cắp.',
+        responses: {
+          200: { description: 'Đã cấp cặp token mới' },
+          401: { description: 'Token thiếu, không hợp lệ, quá hạn, hoặc bị dùng lại' },
+        },
+      },
+    },
+    '/auth/logout': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Đăng xuất thiết bị hiện tại',
+        description: 'Luôn thành công, kể cả khi không có cookie.',
+        responses: { 200: { description: 'Đã đăng xuất' } },
+      },
+    },
+    '/auth/logout-all': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Đăng xuất khỏi mọi thiết bị',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'Đã thu hồi mọi phiên' },
+          401: { description: 'Chưa đăng nhập' },
+        },
+      },
+    },
+    '/auth/me': {
+      get: {
+        tags: ['Auth'],
+        summary: 'Thông tin người đang đăng nhập kèm danh sách quyền',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'Hồ sơ người dùng' },
+          401: { description: 'Chưa đăng nhập' },
         },
       },
     },
@@ -133,6 +246,9 @@ export const openApiDocument = {
     },
   },
   components: {
+    securitySchemes: {
+      bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+    },
     schemas: {
       ApiError: errorResponseSchema,
       CategorySummary: categorySummarySchema,

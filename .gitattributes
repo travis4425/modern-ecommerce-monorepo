@@ -16,3 +16,7 @@
 
 # Ẩn khỏi diff review và khỏi thống kê ngôn ngữ của GitHub
 pnpm-lock.yaml -diff linguist-generated
+
+# Script PowerShell phải giữ BOM và CRLF: PowerShell 5.1 đọc file không BOM
+# theo Windows-1252, làm hỏng mọi ký tự tiếng Việt và gãy parser.
+*.ps1 text eol=crlf working-tree-encoding=UTF-8

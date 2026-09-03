@@ -29,6 +29,36 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(8080),
   DATABASE_URL: z.string().url('DATABASE_URL phải là chuỗi kết nối PostgreSQL hợp lệ'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('debug'),
+
+  /**
+   * Khoá ký access token. Tối thiểu 32 ký tự — khoá ngắn khiến JWT có thể bị
+   * dò offline. Sinh bằng: openssl rand -base64 48
+   */
+  JWT_ACCESS_SECRET: z.string().min(32, 'JWT_ACCESS_SECRET phải dài ít nhất 32 ký tự'),
+  /** Cú pháp của thư viện jsonwebtoken: '15m', '1h', '7d'. */
+  JWT_ACCESS_TTL: z.string().default('15m'),
+  /** Refresh token là chuỗi mờ lưu trong database, nên tính hạn bằng ngày. */
+  REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().min(1).max(90).default(7),
+  /**
+   * Chi phí bcrypt. Mỗi đơn vị tăng gấp đôi thời gian băm. 12 là mức cân bằng
+   * hiện nay: đủ chậm để chống dò, đủ nhanh để đăng nhập không thấy trễ.
+   */
+  BCRYPT_ROUNDS: z.coerce.number().int().min(10).max(15).default(12),
+  /**
+   * Token đặt lại mật khẩu sống rất ngắn: nó đi qua email, mà hộp thư có thể bị
+   * đọc trộm hoặc để mở trên máy chung. 15 phút đủ để người dùng thật bấm vào.
+   */
+  PASSWORD_RESET_TTL_MINUTES: z.coerce.number().int().min(5).max(120).default(15),
+
+  // ── Gửi email ──────────────────────────────────────────────────────────
+  /** Bỏ trống ở dev: email sẽ được in ra terminal thay vì gửi đi thật. */
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.coerce.number().int().positive().default(2525),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  MAIL_FROM: z.string().default('E-Commerce <no-reply@example.com>'),
+  /** Gốc URL của frontend, dùng để dựng link trong email. */
+  WEB_APP_URL: z.string().url().default('http://localhost:5173'),
   WEB_ORIGIN: z
     .string()
     .default('http://localhost:5173')

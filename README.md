@@ -2,7 +2,7 @@
 
 Nền tảng thương mại điện tử full-stack, xây theo hướng production-ready: phân tầng rõ ràng ở backend, kiểu dữ liệu dùng chung giữa hai đầu, đa ngôn ngữ EN/VI, và kiểm thử tự động.
 
-> **Trạng thái:** Phase 2/11 — kernel backend đã xong, resource mới chỉ tốn vài chục dòng. Xem [lộ trình đầy đủ](#lộ-trình) bên dưới.
+> **Trạng thái:** Phase 3a/11 — xác thực, xoay refresh token và phân quyền theo permission đã xong.
 
 ---
 
@@ -145,6 +145,36 @@ kèm mã này là tra ra ngay toàn bộ dấu vết.
 `AppError`. Mọi handler bất đồng bộ phải bọc trong `asyncHandler`, nếu không promise bị
 reject sẽ làm request treo tới khi timeout mà không để lại dòng log nào.
 
+## Xác thực
+
+| Endpoint                | Mô tả                                               |
+| ----------------------- | --------------------------------------------------- |
+| `POST /auth/register`   | Đăng ký. Giới hạn 10 request / 15 phút theo IP.     |
+| `POST /auth/login`      | Đăng nhập.                                          |
+| `POST /auth/refresh`    | Làm mới access token, đồng thời xoay refresh token. |
+| `POST /auth/logout`     | Đăng xuất thiết bị hiện tại.                        |
+| `POST /auth/logout-all` | Thu hồi mọi phiên.                                  |
+| `GET /auth/me`          | Hồ sơ và danh sách quyền của người đang đăng nhập.  |
+
+**Access token** sống 15 phút, nằm trong body, frontend giữ trong bộ nhớ. Quyền được
+nhúng thẳng vào token để mỗi request không phải join ba bảng — đổi lại quyền có thể cũ
+tối đa 15 phút.
+
+**Refresh token** sống 7 ngày, là chuỗi ngẫu nhiên 256 bit (không phải JWT), chỉ lưu
+SHA-256 trong database. Nó đi bằng cookie `httpOnly` + `sameSite=strict` +
+`path=/api/v1/auth`, nên JavaScript không đọc được và không bị gửi kèm ở request khác.
+
+**Xoay và phát hiện đánh cắp.** Mỗi lần làm mới sinh token mới và thu hồi token cũ trong
+cùng một transaction. Mỗi lần đăng nhập mở một _family_ riêng. Nếu một token ĐÃ bị thu hồi
+được dùng lại — điều không thể xảy ra trong luồng bình thường — nghĩa là có hai bên cùng
+giữ token, nên toàn bộ family bị thu hồi và cả hai phải đăng nhập lại.
+
+**Phân quyền theo quyền hạt mịn**, không theo tên vai trò:
+`requirePermission('order:update_status')`. Thêm vai trò mới không phải sửa route nào.
+
+**Chống dò tài khoản.** Sai email và sai mật khẩu trả về cùng một mã lỗi _và_ tốn cùng
+lượng thời gian — khi email không tồn tại, service vẫn chạy một phép so bcrypt giả.
+
 ## Quy ước commit
 
 Dự án dùng [Conventional Commits](https://www.conventionalcommits.org/), được `commitlint` kiểm tra tự động qua Git hook.
@@ -163,7 +193,8 @@ scope: api | web | shared | db | auth | catalog | cart | order | admin | infra |
 | 0     | Monorepo, Docker, hàng rào chất lượng code       | ✅ xong    |
 | 1     | Thiết kế database, Prisma schema, seed           | ✅ xong    |
 | 2     | Kernel backend: BaseRepository, AppError, logger | ✅ xong    |
-| 3     | Auth, refresh token rotation, RBAC               | ⏳         |
+| 3a    | Auth, refresh token rotation, RBAC               | ✅ xong    |
+| 3b    | Quên/đặt lại mật khẩu qua email, bộ test Jest    | ⏳         |
 | 4     | API catalog, upload ảnh, full-text search        | ⏳         |
 | 5     | Bộ khung frontend, design tokens, i18n           | ⏳         |
 | 6     | Hành trình khách vãng lai                        | ⏳         |

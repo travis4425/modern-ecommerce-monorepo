@@ -27,7 +27,8 @@
     "db:seed": "pnpm --filter @ecom/api db:seed",
     "db:reset": "pnpm --filter @ecom/api db:reset",
     "db:generate": "pnpm --filter @ecom/api db:generate",
-    "db:studio": "pnpm --filter @ecom/api db:studio"
+    "db:studio": "pnpm --filter @ecom/api db:studio",
+    "auth:demo": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/auth-demo.ps1"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

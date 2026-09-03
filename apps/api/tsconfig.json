@@ -12,6 +12,12 @@
       "@ecom/shared/*": ["../../packages/shared/src/*"]
     }
   },
-  "include": ["src/**/*.ts", "prisma/**/*.ts", "tsup.config.ts", "prisma.config.ts"],
+  "include": [
+    "src/**/*.ts",
+    "src/types/express.d.ts",
+    "prisma/**/*.ts",
+    "tsup.config.ts",
+    "prisma.config.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }

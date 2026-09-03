@@ -1,0 +1,13 @@
+-- Chặn hai tài khoản chỉ khác nhau hoa thường ở email.
+--
+-- Unique index `users_email_key` do Prisma sinh ra phân biệt hoa thường, nên
+-- 'Travis@Example.com' và 'travis@example.com' cùng chèn được — đủ để ai đó
+-- đăng ký bản sao email của người khác rồi mạo danh.
+--
+-- Prisma không diễn đạt được index trên biểu thức, nên migration này viết tay.
+-- Tầng ứng dụng cũng đã chuẩn hoá email về chữ thường trong Zod schema; index
+-- này là bảo đảm cuối cùng, có hiệu lực kể cả khi ai đó ghi thẳng vào database.
+--
+-- Index này cũng phục vụ truy vấn đăng nhập: EXPLAIN cho thấy
+-- `Index Scan using users_email_lower_key`, không phải Seq Scan.
+CREATE UNIQUE INDEX "users_email_lower_key" ON "users" (lower("email"));
