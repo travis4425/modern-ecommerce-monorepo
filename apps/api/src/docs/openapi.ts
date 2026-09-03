@@ -70,6 +70,7 @@ export const openApiDocument = {
     { name: 'Health', description: 'Kiểm tra tình trạng hệ thống' },
     { name: 'Auth', description: 'Đăng ký, đăng nhập, làm mới token' },
     { name: 'Catalog', description: 'Danh mục và sản phẩm' },
+    { name: 'Admin', description: 'Khu vực quản trị, cần quyền tương ứng' },
   ],
   paths: {
     '/health': {
@@ -194,6 +195,104 @@ export const openApiDocument = {
         responses: {
           200: { description: 'Hồ sơ người dùng' },
           401: { description: 'Chưa đăng nhập' },
+        },
+      },
+    },
+    '/auth/forgot-password': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Gửi email đặt lại mật khẩu',
+        description:
+          'Luôn trả 200 với cùng một thông điệp, dù email có tồn tại hay không — ' +
+          'khác biệt bất kỳ sẽ biến endpoint này thành công cụ liệt kê tài khoản. ' +
+          'Đặt header Accept-Language: en để nhận email tiếng Anh.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['email'],
+                properties: { email: { type: 'string', example: 'khach1@example.com' } },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Đã tiếp nhận' },
+          429: { description: 'RATE_LIMIT_EXCEEDED' },
+        },
+      },
+    },
+    '/auth/reset-password': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Đặt lại mật khẩu bằng token trong email',
+        description:
+          'Token chỉ dùng được một lần và hết hạn sau 15 phút. Thành công thì MỌI phiên ' +
+          'đăng nhập của tài khoản đều bị thu hồi.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['token', 'password'],
+                properties: {
+                  token: { type: 'string' },
+                  password: { type: 'string', example: 'MatKhauMoi@456' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Đã đổi mật khẩu' },
+          400: { description: 'AUTH_RESET_TOKEN_INVALID hoặc AUTH_RESET_TOKEN_EXPIRED' },
+          422: { description: 'VALIDATION_FAILED' },
+        },
+      },
+    },
+    '/admin/users': {
+      get: {
+        tags: ['Admin'],
+        summary: 'Danh sách người dùng (cần quyền user:read)',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'page', in: 'query', schema: { type: 'integer', default: 1 } },
+          { name: 'limit', in: 'query', schema: { type: 'integer', default: 20, maximum: 100 } },
+          {
+            name: 'q',
+            in: 'query',
+            schema: { type: 'string' },
+            description: 'Tìm theo email hoặc họ tên',
+          },
+          {
+            name: 'role',
+            in: 'query',
+            schema: { type: 'string', enum: ['ADMIN', 'STAFF', 'USER'] },
+          },
+          { name: 'isActive', in: 'query', schema: { type: 'string', enum: ['true', 'false'] } },
+          {
+            name: 'sort',
+            in: 'query',
+            schema: {
+              type: 'string',
+              enum: [
+                'created_at',
+                '-created_at',
+                'email',
+                '-email',
+                'last_login_at',
+                '-last_login_at',
+              ],
+            },
+          },
+        ],
+        responses: {
+          200: { description: 'Danh sách kèm meta phân trang' },
+          401: { description: 'AUTH_TOKEN_MISSING — chưa đăng nhập' },
+          403: { description: 'AUTH_INSUFFICIENT_PERMISSION — đã đăng nhập nhưng không đủ quyền' },
         },
       },
     },

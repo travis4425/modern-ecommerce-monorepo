@@ -157,6 +157,17 @@ export async function refresh(
     case 'reject_expired':
       throw new AppError(ERROR_CODES.AUTH_REFRESH_TOKEN_EXPIRED, 'Refresh token has expired', 401);
 
+    case 'reject_revoked':
+      // Phiên đã kết thúc bình thường. Ghi ở mức debug, KHÔNG phải error —
+      // đây không phải sự cố bảo mật, và cảnh báo giả làm hỏng giá trị của
+      // cảnh báo thật.
+      log.debug('refresh token thuộc phiên đã kết thúc');
+      throw new AppError(
+        ERROR_CODES.AUTH_REFRESH_TOKEN_INVALID,
+        'Session has ended, please sign in again',
+        401,
+      );
+
     case 'revoke_family': {
       const revoked = await authRepository.revokeFamily(decision.familyId);
       log.error(

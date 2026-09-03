@@ -13,6 +13,7 @@ import { openApiDocument } from './docs/openapi';
 import healthRoutes from './domains/health/health.routes';
 import categoryRoutes from './domains/categories/category.routes';
 import authRoutes from './domains/auth/auth.routes';
+import userRoutes from './domains/users/user.routes';
 
 /**
  * Lắp ráp ứng dụng Express.
@@ -82,6 +83,7 @@ export function createApp(): Express {
   app.use(API_PREFIX, healthRoutes);
   app.use(API_PREFIX, authRoutes);
   app.use(API_PREFIX, categoryRoutes);
+  app.use(API_PREFIX, userRoutes);
 
   // ── Kết thúc chuỗi ────────────────────────────────────────
   app.use(notFoundMiddleware);

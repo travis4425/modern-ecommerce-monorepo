@@ -50,15 +50,23 @@ export function buildPaginationMeta(total: number, page: number, limit: number):
 export function parseSort<TField extends string>(
   sort: string | undefined,
   allowedFields: Record<string, TField>,
-  fallback: Record<TField, 'asc' | 'desc'>,
+  /**
+   * Thứ tự mặc định, dạng cặp [tên field Prisma, chiều]. Dùng tuple thay vì
+   * object vì object kiểu Record<TField, ...> sẽ bắt phải liệt kê MỌI cột cho
+   * phép sắp xếp, còn Partial<Record<...>> thì giá trị có thể undefined.
+   */
+  fallback: [TField, 'asc' | 'desc'],
 ): Record<string, 'asc' | 'desc'> {
-  if (!sort) return fallback;
+  const defaultOrder = { [fallback[0]]: fallback[1] };
+  if (!sort) return defaultOrder;
 
   const descending = sort.startsWith('-');
   const publicName = descending ? sort.slice(1) : sort;
   const field = allowedFields[publicName];
 
-  if (!field) return fallback;
+  // Cột lạ thì im lặng rơi về mặc định. Báo lỗi ở đây chỉ khiến link cũ có
+  // tham số sort không còn dùng được, mà không bảo vệ thêm được gì.
+  if (!field) return defaultOrder;
 
   return { [field]: descending ? 'desc' : 'asc' };
 }

@@ -7,6 +7,7 @@ function token(overrides: Partial<StoredRefreshToken> = {}): StoredRefreshToken 
     familyId: 'family-1',
     expiresAt: new Date(Date.now() + 7 * 24 * 3600 * 1000),
     revokedAt: null,
+    replacedById: null,
     ...overrides,
   };
 }
@@ -26,10 +27,10 @@ describe('quyết định xoay refresh token', () => {
     );
   });
 
-  it('token ĐÃ thu hồi được dùng lại thì thu hồi cả family', () => {
-    // Trong luồng bình thường điều này bất khả: mỗi token dùng đúng một lần.
-    // Xảy ra nghĩa là hai bên cùng giữ token — gần như chắc chắn đã bị đánh cắp.
-    const decision = decideRotation(token({ revokedAt: new Date() }));
+  it('token ĐÃ XOAY mà được dùng lại thì thu hồi cả family', () => {
+    // replacedById khác null nghĩa là token này từng được dùng thành công một
+    // lần rồi. Nó xuất hiện lần nữa nghĩa là có hai bên cùng giữ nó.
+    const decision = decideRotation(token({ revokedAt: new Date(), replacedById: 'token-2' }));
     expect(decision).toEqual({
       action: 'revoke_family',
       familyId: 'family-1',
@@ -37,10 +38,29 @@ describe('quyết định xoay refresh token', () => {
     });
   });
 
-  it('vừa thu hồi vừa quá hạn thì vẫn báo bị đánh cắp', () => {
+  it('token thu hồi do ĐĂNG XUẤT thì KHÔNG báo bị đánh cắp', () => {
+    // Đây là phân biệt then chốt. Đăng xuất thu hồi token mà không đặt
+    // replacedById. Gộp chung với trường hợp trên sẽ khiến mọi lần đăng xuất
+    // bình thường bắn ra một cảnh báo bảo mật giả — và cảnh báo giả nhiều thì
+    // cảnh báo thật cũng bị bỏ qua.
+    const decision = decideRotation(token({ revokedAt: new Date(), replacedById: null }));
+    expect(decision.action).toBe('reject_revoked');
+  });
+
+  it('token chết theo family cũng chỉ là reject_revoked', () => {
+    // Khi cả family bị thu hồi, token mới nhất chưa từng được xoay nên
+    // replacedById của nó vẫn null. Chủ tài khoản không làm gì sai.
+    expect(decideRotation(token({ revokedAt: new Date() })).action).toBe('reject_revoked');
+  });
+
+  it('vừa xoay vừa quá hạn thì vẫn báo bị đánh cắp', () => {
     // Thứ tự kiểm tra quan trọng: tín hiệu bị đánh cắp giá trị hơn tín hiệu hết hạn.
     const decision = decideRotation(
-      token({ revokedAt: new Date(), expiresAt: new Date(Date.now() - 1000) }),
+      token({
+        revokedAt: new Date(),
+        replacedById: 'token-2',
+        expiresAt: new Date(Date.now() - 1000),
+      }),
     );
     expect(decision.action).toBe('revoke_family');
   });

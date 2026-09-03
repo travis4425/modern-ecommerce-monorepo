@@ -2,7 +2,7 @@
 
 Nền tảng thương mại điện tử full-stack, xây theo hướng production-ready: phân tầng rõ ràng ở backend, kiểu dữ liệu dùng chung giữa hai đầu, đa ngôn ngữ EN/VI, và kiểm thử tự động.
 
-> **Trạng thái:** Phase 3a/11 — xác thực, xoay refresh token và phân quyền theo permission đã xong.
+> **Trạng thái:** Phase 3/11 — xác thực đầy đủ, phân quyền, đặt lại mật khẩu qua email, 70 test unit.
 
 ---
 
@@ -175,6 +175,42 @@ giữ token, nên toàn bộ family bị thu hồi và cả hai phải đăng nh
 **Chống dò tài khoản.** Sai email và sai mật khẩu trả về cùng một mã lỗi _và_ tốn cùng
 lượng thời gian — khi email không tồn tại, service vẫn chạy một phép so bcrypt giả.
 
+## Kiểm thử
+
+```bash
+pnpm --filter @ecom/api test:unit          # 70 test, không cần database
+pnpm --filter @ecom/api test:integration   # cần Postgres đã seed
+pnpm --filter @ecom/api test               # cả hai
+pnpm --filter @ecom/api test:cov           # kèm báo cáo coverage
+```
+
+Hai loại tách bạch có lý do: bắt lập trình viên dựng database chỉ để kiểm một hàm băm
+là cách nhanh nhất khiến không ai chạy test nữa. Test unit chạy ở mọi nơi trong khoảng
+2 giây và là phần chạy trong mọi commit; test tích hợp gọi API thật qua Supertest xuống
+tới database thật, nên bắt được thứ test unit không thể: transaction, ràng buộc của
+database, và thứ tự middleware.
+
+Trước khi chạy test tích hợp:
+
+```bash
+pnpm db:up && pnpm db:reset
+```
+
+## Quên mật khẩu
+
+`POST /auth/forgot-password` luôn trả về cùng một phản hồi, dù email có tồn tại hay
+không — khác biệt bất kỳ sẽ biến nó thành công cụ liệt kê tài khoản.
+
+Token đặt lại sống 15 phút, chỉ dùng được một lần, và mỗi lần phát mới sẽ vô hiệu hoá
+mọi token cũ chưa dùng. Đổi mật khẩu thành công thì **mọi phiên đăng nhập đều bị thu
+hồi**: kịch bản đặt lại mật khẩu thường bắt nguồn từ việc tài khoản đã bị chiếm, nên để
+phiên cũ sống tiếp là để kẻ chiếm quyền ở nguyên bên trong.
+
+Email song ngữ theo header `Accept-Language`. Ở dev, **không cần cấu hình gì**: bỏ trống
+`SMTP_HOST` thì nội dung email được in thẳng ra terminal. Muốn thử gửi thật thì đăng ký
+[Mailtrap](https://mailtrap.io) miễn phí và điền SMTP vào `.env` — mọi email sẽ nằm lại
+trong hộp thư Mailtrap, không bao giờ bay tới người thật.
+
 ## Quy ước commit
 
 Dự án dùng [Conventional Commits](https://www.conventionalcommits.org/), được `commitlint` kiểm tra tự động qua Git hook.
@@ -194,7 +230,7 @@ scope: api | web | shared | db | auth | catalog | cart | order | admin | infra |
 | 1     | Thiết kế database, Prisma schema, seed           | ✅ xong    |
 | 2     | Kernel backend: BaseRepository, AppError, logger | ✅ xong    |
 | 3a    | Auth, refresh token rotation, RBAC               | ✅ xong    |
-| 3b    | Quên/đặt lại mật khẩu qua email, bộ test Jest    | ⏳         |
+| 3b    | Quên/đặt lại mật khẩu qua email, bộ test Jest    | ✅ xong    |
 | 4     | API catalog, upload ảnh, full-text search        | ⏳         |
 | 5     | Bộ khung frontend, design tokens, i18n           | ⏳         |
 | 6     | Hành trình khách vãng lai                        | ⏳         |

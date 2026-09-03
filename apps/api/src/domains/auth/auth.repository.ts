@@ -78,7 +78,14 @@ export const authRepository = {
   async findRefreshTokenByHash(tokenHash: string): Promise<StoredRefreshToken | null> {
     return prisma.refreshToken.findUnique({
       where: { tokenHash },
-      select: { id: true, userId: true, familyId: true, expiresAt: true, revokedAt: true },
+      select: {
+        id: true,
+        userId: true,
+        familyId: true,
+        expiresAt: true,
+        revokedAt: true,
+        replacedById: true,
+      },
     }) as Promise<StoredRefreshToken | null>;
   },
 

@@ -92,6 +92,15 @@ Mã lỗi mới phải thêm vào `packages/shared/src/constants/error-codes.ts`
 - **`z.coerce.boolean()` coi chuỗi `'false'` là `true`.** Tham số boolean trên query
   string phải dùng `z.enum(['true','false'])` rồi transform.
 
+## Cảnh báo bảo mật phải không có báo động giả
+
+Log ở mức `error` gắn với sự cố bảo mật (ví dụ "PHÁT HIỆN DÙNG LẠI REFRESH TOKEN")
+chỉ được bắn khi thật sự có dấu hiệu tấn công. Một lần đăng xuất bình thường, một
+lần đặt lại mật khẩu, hay một tab cũ gọi lại API — đều KHÔNG được kích hoạt chúng.
+
+Cảnh báo kêu sai nhiều lần thì đến lúc kêu đúng cũng không ai còn để ý. Khi thêm
+một cảnh báo mới, luôn tự hỏi: đường đi bình thường nào có thể chạm vào nó?
+
 ## Quy trình làm việc
 
 Làm từng phase một. Kết thúc mỗi phase thì dừng lại, báo cáo, chờ người dùng kiểm tra trên localhost, chụp ảnh màn hình và commit. Chỉ đi tiếp khi người dùng xác nhận.
