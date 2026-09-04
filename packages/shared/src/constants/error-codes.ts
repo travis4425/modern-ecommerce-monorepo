@@ -66,6 +66,23 @@ export const ERROR_CODES = {
   /** Không thể gán sản phẩm vào danh mục cha — sản phẩm chỉ thuộc danh mục lá. */
   CATEGORY_NOT_LEAF: 'CATEGORY_NOT_LEAF',
   PRODUCT_SKU_EXISTS: 'PRODUCT_SKU_EXISTS',
+
+  // ── Tải ảnh lên ─────────────────────────────────────────────────────────
+  /** Request multipart nhưng không có phần tệp nào tên `file`. */
+  UPLOAD_FILE_MISSING: 'UPLOAD_FILE_MISSING',
+  UPLOAD_FILE_TOO_LARGE: 'UPLOAD_FILE_TOO_LARGE',
+  /**
+   * Nội dung tệp không phải ảnh thuộc danh sách cho phép. Kết luận này dựa
+   * trên chữ ký byte đầu tệp, KHÔNG dựa trên Content-Type do client khai.
+   */
+  UPLOAD_FILE_TYPE_UNSUPPORTED: 'UPLOAD_FILE_TYPE_UNSUPPORTED',
+  UPLOAD_TOO_MANY_FILES: 'UPLOAD_TOO_MANY_FILES',
+  /** Lưu trữ (đĩa hoặc Cloudinary) từ chối. Lỗi hạ tầng, không phải lỗi người dùng. */
+  UPLOAD_STORAGE_FAILED: 'UPLOAD_STORAGE_FAILED',
+  PRODUCT_IMAGE_NOT_FOUND: 'PRODUCT_IMAGE_NOT_FOUND',
+  PRODUCT_IMAGE_LIMIT_REACHED: 'PRODUCT_IMAGE_LIMIT_REACHED',
+  /** Danh sách sắp xếp gửi lên không khớp đúng tập ảnh hiện có của sản phẩm. */
+  PRODUCT_IMAGE_ORDER_MISMATCH: 'PRODUCT_IMAGE_ORDER_MISMATCH',
 } as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];

@@ -4,7 +4,8 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import swaggerUi from 'swagger-ui-express';
 import { API_PREFIX } from '@ecom/shared';
-import { env, isProduction } from './config/env';
+import { env, imageStorageDriver, isProduction } from './config/env';
+import { uploadRoot, uploadUrlPath } from './common/upload/disk.storage';
 import { requestContextMiddleware } from './common/middleware/request-context.middleware';
 import { globalRateLimiter } from './common/middleware/rate-limit.middleware';
 import { notFoundMiddleware } from './common/middleware/not-found.middleware';
@@ -42,6 +43,32 @@ export function createApp(): Express {
   app.use(requestContextMiddleware);
   app.use(helmet());
   app.use(cors({ origin: env.WEB_ORIGIN, credentials: true }));
+  // Ảnh lưu đĩa được phục vụ TRƯỚC bộ đếm hạn mức: một trang danh sách kéo về
+  // hai ba chục ảnh cùng lúc, tính chúng vào hạn mức API sẽ khoá người dùng
+  // thật chỉ vì họ mở trang có nhiều sản phẩm.
+  if (imageStorageDriver === 'disk') {
+    app.use(
+      uploadUrlPath,
+      express.static(uploadRoot, {
+        index: false,
+        dotfiles: 'ignore',
+        maxAge: '7d',
+        setHeaders(response) {
+          // helmet() đặt Cross-Origin-Resource-Policy: same-origin cho toàn bộ
+          // ứng dụng. Frontend chạy ở cổng 5173, khác origin với API ở 8080,
+          // nên nếu không nới đúng chỗ này thì mọi thẻ <img> đều bị trình duyệt
+          // chặn — mà DevTools chỉ báo một dòng CORP rất dễ bỏ qua.
+          response.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+          // Thư mục này chứa tệp do người dùng gửi lên. Dù đã kiểm chữ ký byte,
+          // vẫn khoá mọi khả năng thực thi: không script, không nhúng, và bắt
+          // trình duyệt tôn trọng Content-Type thay vì tự đoán.
+          response.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
+          response.setHeader('X-Content-Type-Options', 'nosniff');
+        },
+      }),
+    );
+  }
+
   app.use(globalRateLimiter);
 
   // Phải đứng trước mọi route đọc cookie — refresh token đi bằng cookie HTTPOnly.

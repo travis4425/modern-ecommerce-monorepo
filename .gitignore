@@ -32,6 +32,9 @@ Thumbs.db
 # docker volume dữ liệu local
 .docker-data/
 
+# ảnh tải lên ở chế độ lưu đĩa (dev). Không bao giờ commit tệp người dùng gửi.
+apps/api/uploads/
+
 # prisma — client được sinh lại bằng `pnpm db:generate` (postinstall tự chạy)
 apps/api/src/generated/
 apps/api/prisma/*.db

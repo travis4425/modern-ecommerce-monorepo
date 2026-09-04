@@ -19,6 +19,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "pnpm -r test",
+    "verify": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm build && pnpm -r test:unit",
+    "verify:full": "pnpm verify && pnpm -r test:integration",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "db:logs": "docker compose logs -f postgres",

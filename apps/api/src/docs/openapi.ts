@@ -400,6 +400,136 @@ export const openApiDocument = {
         },
       },
     },
+    '/admin/products/{id}/images': {
+      get: {
+        tags: ['Admin'],
+        summary: 'Danh sách ảnh của sản phẩm (cần product:read)',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: { 200: { description: 'Mảng ảnh, sắp theo sortOrder' } },
+      },
+      post: {
+        tags: ['Admin'],
+        summary: 'Tải một ảnh lên (cần product:update)',
+        description:
+          'multipart/form-data, phần tệp tên `file`. Kiểu ảnh được xác định bằng CHỮ KÝ BYTE ' +
+          'chứ không theo Content-Type client khai — SVG và GIF bị từ chối. Ảnh đầu tiên của ' +
+          'sản phẩm luôn tự trở thành ảnh đại diện.',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'multipart/form-data': {
+              schema: {
+                type: 'object',
+                required: ['file'],
+                properties: {
+                  file: { type: 'string', format: 'binary' },
+                  alt: { type: 'string', maxLength: 255 },
+                  isPrimary: { type: 'string', enum: ['true', 'false'] },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: 'Đã lưu' },
+          400: { description: 'UPLOAD_FILE_MISSING' },
+          404: { description: 'PRODUCT_NOT_FOUND' },
+          409: { description: 'PRODUCT_IMAGE_LIMIT_REACHED' },
+          413: { description: 'UPLOAD_FILE_TOO_LARGE' },
+          415: { description: 'UPLOAD_FILE_TYPE_UNSUPPORTED — nội dung không phải ảnh cho phép' },
+        },
+      },
+    },
+    '/admin/products/{id}/images/order': {
+      put: {
+        tags: ['Admin'],
+        summary: 'Sắp xếp lại ảnh (cần product:update)',
+        description:
+          'Thân request là `{ order: [imageId, ...] }` và phải là HOÁN VỊ ĐẦY ĐỦ của tập ảnh ' +
+          'hiện có: không thiếu, không thừa, không trùng.',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: {
+          200: { description: 'Danh sách ảnh theo thứ tự mới' },
+          400: { description: 'PRODUCT_IMAGE_ORDER_MISMATCH' },
+        },
+      },
+    },
+    '/admin/products/{id}/images/{imageId}': {
+      put: {
+        tags: ['Admin'],
+        summary: 'Thay tệp của một ảnh (cần product:update)',
+        description:
+          'Giữ nguyên id, thứ tự và cờ đại diện; tệp cũ bị xoá khỏi nơi lưu trữ SAU khi bản ghi ' +
+          'đã trỏ sang tệp mới.',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+          {
+            name: 'imageId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'Đã thay' },
+          404: { description: 'PRODUCT_IMAGE_NOT_FOUND' },
+          415: { description: 'UPLOAD_FILE_TYPE_UNSUPPORTED' },
+        },
+      },
+      patch: {
+        tags: ['Admin'],
+        summary: 'Sửa alt hoặc đặt làm ảnh đại diện (cần product:update)',
+        description:
+          'Chỉ có đường ĐẶT làm đại diện. Không có đường gỡ: gỡ cờ của ảnh duy nhất đang mang ' +
+          'nó sẽ để sản phẩm không còn ảnh đại diện nào.',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+          {
+            name: 'imageId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: { description: 'Đã sửa' },
+          404: { description: 'PRODUCT_IMAGE_NOT_FOUND' },
+        },
+      },
+      delete: {
+        tags: ['Admin'],
+        summary: 'Xoá ảnh (cần product:update)',
+        description:
+          'Xoá CỨNG — ảnh không được bảng nào tham chiếu tới. Nếu ảnh bị xoá đang là đại diện ' +
+          'thì ảnh còn lại đứng đầu tự kế thừa vai trò.',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+          {
+            name: 'imageId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          204: { description: 'Đã xoá' },
+          404: { description: 'PRODUCT_IMAGE_NOT_FOUND' },
+        },
+      },
+    },
     '/admin/users': {
       get: {
         tags: ['Admin'],

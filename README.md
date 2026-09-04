@@ -101,21 +101,23 @@ Mật khẩu chung: `Password@123`
 
 ## Script
 
-| Lệnh                     | Tác dụng                             |
-| ------------------------ | ------------------------------------ |
-| `pnpm dev`               | Chạy song song api và web            |
-| `pnpm dev:api`           | Chỉ chạy backend                     |
-| `pnpm dev:web`           | Chỉ chạy frontend                    |
-| `pnpm build`             | Build toàn bộ workspace              |
-| `pnpm typecheck`         | Kiểm tra kiểu toàn bộ workspace      |
-| `pnpm lint`              | ESLint, không chấp nhận warning      |
-| `pnpm format`            | Prettier ghi đè toàn bộ file         |
-| `pnpm db:up` / `db:down` | Bật / tắt PostgreSQL bằng Docker     |
-| `pnpm db:migrate`        | Tạo và áp dụng migration             |
-| `pnpm db:seed`           | Nạp dữ liệu mẫu                      |
-| `pnpm db:reset`          | Xoá sạch, chạy lại migration và seed |
-| `pnpm db:studio`         | Mở Prisma Studio để xem dữ liệu      |
-| `pnpm db:generate`       | Sinh lại Prisma Client               |
+| Lệnh                     | Tác dụng                              |
+| ------------------------ | ------------------------------------- |
+| `pnpm dev`               | Chạy song song api và web             |
+| `pnpm dev:api`           | Chỉ chạy backend                      |
+| `pnpm dev:web`           | Chỉ chạy frontend                     |
+| `pnpm build`             | Build toàn bộ workspace               |
+| `pnpm typecheck`         | Kiểm tra kiểu toàn bộ workspace       |
+| `pnpm lint`              | ESLint, không chấp nhận warning       |
+| `pnpm format`            | Prettier ghi đè toàn bộ file          |
+| `pnpm db:up` / `db:down` | Bật / tắt PostgreSQL bằng Docker      |
+| `pnpm db:migrate`        | Tạo và áp dụng migration              |
+| `pnpm db:seed`           | Nạp dữ liệu mẫu                       |
+| `pnpm db:reset`          | Xoá sạch, chạy lại migration và seed  |
+| `pnpm db:studio`         | Mở Prisma Studio để xem dữ liệu       |
+| `pnpm db:generate`       | Sinh lại Prisma Client                |
+| `pnpm verify`            | Toàn bộ cổng chất lượng, không cần DB |
+| `pnpm verify:full`       | Như trên, kèm test tích hợp           |
 
 ## Quy ước API
 
@@ -233,6 +235,30 @@ nối chuỗi, và nó chỉ nhận giá trị từ một bảng hằng.
 
 **Tiền luôn là chuỗi trong JSON.** `numeric(12,2)` vượt độ chính xác an toàn của số dấu
 phẩy động JavaScript, nên chuyển sang `number` là mở đường cho sai số.
+
+## Ảnh sản phẩm
+
+Chạy được ngay sau khi clone: không cấu hình gì thì ảnh được lưu vào `apps/api/uploads`
+và phục vụ tại `http://localhost:8080/uploads/...`. Điền ba biến `CLOUDINARY_*` trong
+`.env` thì hệ thống tự chuyển sang Cloudinary — không phải sửa dòng mã nào.
+
+**Kiểu tệp được kết luận bằng chữ ký byte, không bằng lời khai của client.** Đổi tên
+`payload.svg` thành `anh.png` rồi khai `Content-Type: image/png` là việc của một dòng
+lệnh; nếu tin lời khai thì tệp đó được lưu lại và phục vụ từ chính origin của cửa hàng
+— nghĩa là XSS lưu trữ. Danh sách cho phép cố ý không có SVG (là XML, chứa được
+`<script>`) và không có GIF.
+
+Chi tiết khác:
+
+- Tệp giữ trong bộ nhớ, có trần kích thước, chỉ ghi xuống nơi lưu trữ sau khi qua kiểm.
+- Tên tệp do server sinh — tên client gửi lên có thể chứa `../`.
+- Ghi tệp trước, ghi database sau; database lỗi thì xoá tệp vừa lưu, không để lại tệp
+  mồ côi. Khi thay ảnh: lưu tệp mới, cập nhật bản ghi, rồi mới xoá tệp cũ.
+- Mỗi sản phẩm luôn có đúng **một** ảnh đại diện: ảnh đầu tiên tự nhận vai trò, và khi
+  ảnh đại diện bị xoá thì ảnh còn lại đứng đầu kế thừa.
+- Endpoint: `GET|POST /admin/products/:id/images`,
+  `PUT /admin/products/:id/images/order`,
+  `PUT|PATCH|DELETE /admin/products/:id/images/:imageId`.
 
 ## Quy ước commit
 

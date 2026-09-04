@@ -1,3 +1,4 @@
+import os from 'node:os';
 import path from 'node:path';
 import { config as loadEnv } from 'dotenv';
 
@@ -36,3 +37,16 @@ if (process.env.DATABASE_URL_TEST) {
 
 process.env.DATABASE_URL ??=
   'postgresql://ecom:ecom_dev_password@localhost:5432/ecommerce?schema=public';
+
+/**
+ * Test KHÔNG BAO GIỜ được gọi ra Cloudinary. Xoá rỗng cả ba khoá để
+ * imageStorageDriver luôn là 'disk', kể cả khi máy của người chạy có cấu hình
+ * Cloudinary thật trong .env — nếu không, một lần `pnpm test` sẽ rải ảnh rác
+ * lên tài khoản thật và tiêu quota.
+ */
+process.env.CLOUDINARY_CLOUD_NAME = '';
+process.env.CLOUDINARY_API_KEY = '';
+process.env.CLOUDINARY_API_SECRET = '';
+
+/** Ảnh của test đi vào thư mục tạm của hệ điều hành, không rơi vào cây mã nguồn. */
+process.env.UPLOAD_DIR = path.join(os.tmpdir(), 'ecom-test-uploads');

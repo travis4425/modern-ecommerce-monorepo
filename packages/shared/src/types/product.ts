@@ -33,6 +33,16 @@ export interface ProductImageItem {
   isPrimary: boolean;
 }
 
+/**
+ * Ảnh nhìn từ khu quản trị: có thêm id và thứ tự để sửa và sắp xếp.
+ * `publicId` của Cloudinary KHÔNG bao giờ lộ ra ngoài — nó là khoá để xoá
+ * tệp trên dịch vụ lưu trữ, chỉ backend cần biết.
+ */
+export interface ProductImageAdminItem extends ProductImageItem {
+  id: string;
+  sortOrder: number;
+}
+
 export interface ProductDetail extends ProductListItem {
   description: string | null;
   shortDescription: string | null;

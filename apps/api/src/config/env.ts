@@ -73,6 +73,37 @@ const envSchema = z.object({
     .string()
     .default('http://localhost:5173')
     .transform((value) => value.split(',').map((origin) => origin.trim())),
+
+  // ── Tải ảnh sản phẩm ───────────────────────────────────────────────────
+  /**
+   * Trần kích thước MỘT tệp. Đặt ở đây chứ không nhét số cứng vào multer:
+   * cùng con số này còn phải xuất hiện trong thông báo lỗi và trong tài liệu
+   * API, ba nơi lệch nhau là chuyện chắc chắn xảy ra nếu chép tay.
+   */
+  UPLOAD_MAX_FILE_SIZE_MB: z.coerce.number().int().min(1).max(20).default(5),
+  /** Trần số ảnh mỗi sản phẩm — chặn một tài khoản staff làm đầy ổ đĩa. */
+  UPLOAD_MAX_IMAGES_PER_PRODUCT: z.coerce.number().int().min(1).max(20).default(8),
+  /**
+   * Thư mục lưu ảnh khi chạy chế độ đĩa. Đường dẫn tương đối tính từ thư mục
+   * làm việc của tiến trình; đường dẫn tuyệt đối cũng chấp nhận (bộ test trỏ
+   * vào thư mục tạm để không rải tệp vào cây mã nguồn).
+   */
+  UPLOAD_DIR: z.string().default('uploads'),
+  /**
+   * Gốc URL công khai của CHÍNH API này. Ảnh lưu trên đĩa được phục vụ bởi
+   * API, nên URL trả về cho frontend phải là tuyệt đối — frontend chạy ở
+   * cổng khác (5173) nên đường dẫn tương đối sẽ trỏ nhầm về chính nó.
+   */
+  API_PUBLIC_URL: z.string().url().default('http://localhost:8080'),
+
+  /**
+   * Bỏ trống cả ba biến Cloudinary thì hệ thống tự chuyển sang lưu đĩa. Nhờ
+   * vậy dự án chạy được ngay sau khi clone, không bắt ai đăng ký dịch vụ.
+   */
+  CLOUDINARY_CLOUD_NAME: z.string().optional(),
+  CLOUDINARY_API_KEY: z.string().optional(),
+  CLOUDINARY_API_SECRET: z.string().optional(),
+  CLOUDINARY_FOLDER: z.string().default('ecommerce/products'),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -90,6 +121,17 @@ export const env = parsed.data;
 
 export const isProduction = env.NODE_ENV === 'production';
 export const isTest = env.NODE_ENV === 'test';
+
+/**
+ * Chọn nơi lưu ảnh MỘT LẦN lúc khởi động, không quyết định lại ở mỗi request.
+ * Đủ ba khoá Cloudinary thì dùng Cloudinary, thiếu bất kỳ khoá nào thì lưu đĩa
+ * — nửa vời (có cloud_name nhưng thiếu secret) là cấu hình sai, và im lặng
+ * chạy tiếp với một nửa cấu hình là cách hỏng khó hiểu nhất.
+ */
+export const imageStorageDriver: 'cloudinary' | 'disk' =
+  env.CLOUDINARY_CLOUD_NAME && env.CLOUDINARY_API_KEY && env.CLOUDINARY_API_SECRET
+    ? 'cloudinary'
+    : 'disk';
 
 /**
  * Mô tả đích kết nối database để in ra log, đã loại bỏ mật khẩu.

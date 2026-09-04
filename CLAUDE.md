@@ -10,6 +10,7 @@ Dự án: nền tảng E-Commerce full-stack, pnpm monorepo, React + Vite / Expr
 | `sql-schema-design`     | Thiết kế bảng, chọn kiểu dữ liệu, khoá, index, viết migration |
 | `code-review-checklist` | Rà soát trước mỗi commit ở cuối phase                         |
 | `skill-sync`            | Cập nhật chính file này khi tech stack thay đổi               |
+| `test-suite-hygiene`    | Viết/sửa test, quyết định test sai hay code sai, gỡ test rung |
 
 ## Skill Gaps — sẽ tạo trong quá trình làm
 
@@ -61,6 +62,18 @@ routes → controller → service → repository → database
 - Kiểu và schema dùng chung đặt ở `packages/shared`, không khai báo lặp hai đầu.
 - Không ném chuỗi hay object trần. Luôn ném lớp kế thừa `AppError`.
 
+**Tệp người dùng gửi lên**
+
+- Kiểu tệp kết luận bằng CHỮ KÝ BYTE (`common/upload/file-type.ts`), không bao giờ
+  bằng `Content-Type` hay phần mở rộng do client khai — cả hai đều đổi được.
+- Cho phép jpeg / png / webp / avif. KHÔNG svg (là XML, chứa được `<script>` →
+  XSS lưu trữ khi phục vụ lại từ origin của mình), không gif.
+- Tên tệp trên đĩa do server sinh (`randomUUID`), không lấy từ tên client gửi.
+- Giữ tệp trong bộ nhớ (`multer.memoryStorage`) kèm `limits.fileSize`; không ghi
+  xuống đĩa trước khi kiểm.
+- Ghi tệp trước, ghi database sau — database lỗi thì XOÁ tệp vừa lưu. Khi thay
+  ảnh: lưu tệp mới, cập nhật bản ghi, rồi mới xoá tệp cũ.
+
 ## Thêm một resource mới — theo đúng thứ tự này
 
 Kernel ở `src/common/` đã lo phần lặp lại. Một resource mới chỉ cần sáu file trong
@@ -108,6 +121,24 @@ Mã lỗi mới phải thêm vào `packages/shared/src/constants/error-codes.ts`
   của máy.** Thứ tự đó nằm ở `tests/helpers/setup-env.ts`; `src/config/env.ts`
   không bật override khi `NODE_ENV=test`. Sai thứ tự này đã hai lần làm cả bộ
   test chạy sai chế độ.
+- **Middleware upload phải đứng TRƯỚC `validate()`.** Với request multipart, các
+  trường văn bản chỉ xuất hiện trong `req.body` sau khi multer phân tích xong. Đảo
+  thứ tự thì validator luôn nhìn thấy object rỗng và mọi trường optional đều biến mất.
+- **Boolean từ multipart là CHUỖI.** `z.coerce.boolean()` biến `'false'` thành
+  `true` vì chuỗi khác rỗng là truthy. Dùng `z.enum(['true','false']).transform(...)`.
+- **`helmet()` đặt `Cross-Origin-Resource-Policy: same-origin` cho toàn ứng dụng.**
+  Frontend ở cổng 5173 khác origin với API ở 8080, nên mọi thẻ `<img>` trỏ vào
+  `/uploads` đều bị trình duyệt chặn cho tới khi route tĩnh tự đặt lại header này
+  thành `cross-origin`. DevTools chỉ báo một dòng CORP rất dễ bỏ qua.
+- **Route tĩnh phục vụ ảnh phải nằm TRƯỚC rate limiter.** Một trang danh sách kéo
+  về vài chục ảnh cùng lúc; tính chúng vào hạn mức API sẽ khoá người dùng thật.
+- **Route cố định phải khai báo trước route có tham số.** `/images/order` đặt sau
+  `/images/:imageId` sẽ bị nuốt và trả 400 vì `order` không phải uuid. Cùng đúng
+  một lỗi với `/products/brands` và `/products/:slug`.
+- **Test không được chạm dịch vụ ngoài.** `setup-env.ts` xoá rỗng khoá Cloudinary
+  và trỏ `UPLOAD_DIR` vào thư mục tạm; `test-environment.test.ts` khẳng định lại
+  cả hai. Không có chốt này, một lần `pnpm test` trên máy có cấu hình thật sẽ rải
+  ảnh rác lên tài khoản đó.
 - **Logger phải tắt transport ở môi trường test.** `enabled: false` của pino không
   chặn được `pino-pretty` vì transport chạy ở worker thread riêng — output test sẽ
   dài hàng nghìn dòng và nhấn chìm tên test hỏng.
@@ -124,5 +155,12 @@ một cảnh báo mới, luôn tự hỏi: đường đi bình thường nào c�
 ## Quy trình làm việc
 
 Làm từng phase một. Kết thúc mỗi phase thì dừng lại, báo cáo, chờ người dùng kiểm tra trên localhost, chụp ảnh màn hình và commit. Chỉ đi tiếp khi người dùng xác nhận.
+
+Trước khi commit, chạy **một lệnh duy nhất**:
+
+```
+pnpm verify        # lint + prettier + typecheck + build + test unit  (không cần database)
+pnpm verify:full   # thêm test tích hợp                              (cần Postgres đang chạy)
+```
 
 Commit theo Conventional Commits, có `commitlint` kiểm tra qua Git hook.

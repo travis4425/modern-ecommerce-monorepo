@@ -1,4 +1,6 @@
-import { env, isTest } from '../../src/config/env';
+import path from 'node:path';
+import { env, imageStorageDriver, isTest } from '../../src/config/env';
+import { uploadRoot } from '../../src/common/upload/disk.storage';
 
 /**
  * Bộ test tự kiểm tra chính môi trường của nó.
@@ -29,5 +31,17 @@ describe('môi trường chạy test', () => {
 
   it('không gửi email thật', () => {
     expect(env.SMTP_HOST ?? '').toBe('');
+  });
+
+  it('không bao giờ tải ảnh lên Cloudinary thật', () => {
+    // Một lần `pnpm test` trên máy có cấu hình Cloudinary thật sẽ rải ảnh rác
+    // lên tài khoản đó và tiêu quota — mà không có gì trong log báo lại.
+    expect(imageStorageDriver).toBe('disk');
+  });
+
+  it('ảnh của test nằm ngoài cây mã nguồn', () => {
+    expect(path.isAbsolute(uploadRoot)).toBe(true);
+    expect(uploadRoot).not.toContain(`${path.sep}src${path.sep}`);
+    expect(uploadRoot.endsWith('ecom-test-uploads')).toBe(true);
   });
 });
