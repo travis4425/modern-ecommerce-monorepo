@@ -16,6 +16,7 @@
     "src/**/*.ts",
     "src/types/express.d.ts",
     "prisma/**/*.ts",
+    "scripts/**/*.ts",
     "tsup.config.ts",
     "prisma.config.ts"
   ],
