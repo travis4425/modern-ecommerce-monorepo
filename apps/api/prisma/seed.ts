@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../src/generated/prisma/client';
+import { slugify } from '@ecom/shared';
 import { PERMISSIONS, STAFF_PERMISSIONS, CATEGORY_TREE, PRODUCTS, COUPONS } from './seed-data';
 
 const connectionString = process.env.DATABASE_URL;
@@ -16,18 +17,6 @@ const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
 /** Mật khẩu chung cho mọi tài khoản mẫu. Chỉ dùng ở môi trường dev. */
 const DEMO_PASSWORD = 'Password@123';
 const BCRYPT_ROUNDS = 12;
-
-/** Bỏ dấu tiếng Việt rồi tạo slug an toàn cho URL. */
-function slugify(input: string): string {
-  return input
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/đ/g, 'd')
-    .replace(/Đ/g, 'D')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
 
 function daysFromNow(days: number): Date {
   return new Date(Date.now() + days * 24 * 60 * 60 * 1000);

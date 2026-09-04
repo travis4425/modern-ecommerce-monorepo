@@ -253,6 +253,153 @@ export const openApiDocument = {
         },
       },
     },
+    '/admin/categories': {
+      get: {
+        tags: ['Admin'],
+        summary: 'Danh sách danh mục, gồm cả danh mục đang tắt (cần category:read)',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'Danh sách phẳng' },
+          403: { description: 'Không đủ quyền' },
+        },
+      },
+      post: {
+        tags: ['Admin'],
+        summary: 'Tạo danh mục (cần category:create)',
+        description:
+          'Slug tự sinh từ tên, bỏ dấu tiếng Việt, trùng thì thêm hậu tố số. ' +
+          'Cây danh mục chỉ có HAI cấp: parentId phải trỏ tới một danh mục gốc.',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['name'],
+                properties: {
+                  name: { type: 'string', example: 'Bàn phím cơ' },
+                  parentId: { type: 'string', format: 'uuid', nullable: true },
+                  description: { type: 'string', nullable: true },
+                  imageUrl: { type: 'string', format: 'uri', nullable: true },
+                  sortOrder: { type: 'integer', default: 0 },
+                  isActive: { type: 'boolean', default: true },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: 'Đã tạo' },
+          400: { description: 'CATEGORY_DEPTH_EXCEEDED — vượt quá hai cấp' },
+          403: { description: 'Không đủ quyền' },
+        },
+      },
+    },
+    '/admin/categories/{id}': {
+      patch: {
+        tags: ['Admin'],
+        summary: 'Sửa danh mục (cần category:update)',
+        description: 'Đổi tên thì slug đi theo. Body rỗng bị từ chối.',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: { 200: { description: 'Đã sửa' }, 404: { description: 'CATEGORY_NOT_FOUND' } },
+      },
+      delete: {
+        tags: ['Admin'],
+        summary: 'Xoá mềm danh mục (cần category:delete)',
+        description:
+          'Từ chối khi danh mục còn danh mục con hoặc còn sản phẩm — trả về đúng lý do ' +
+          'thay vì một lỗi ràng buộc chung chung từ database.',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: {
+          204: { description: 'Đã xoá mềm' },
+          409: { description: 'CATEGORY_HAS_CHILDREN hoặc CATEGORY_HAS_PRODUCTS' },
+        },
+      },
+    },
+    '/admin/products': {
+      post: {
+        tags: ['Admin'],
+        summary: 'Tạo sản phẩm (cần product:create)',
+        description:
+          'Sản phẩm, thông số kỹ thuật và dòng tồn kho được tạo trong CÙNG một transaction. ' +
+          'Chỉ gán được vào danh mục lá. SKU tự viết hoa. Giá gửi dưới dạng chuỗi.',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['categoryId', 'sku', 'name', 'price'],
+                properties: {
+                  categoryId: { type: 'string', format: 'uuid' },
+                  sku: { type: 'string', example: 'KB-AKKO-5075B' },
+                  name: { type: 'string', example: 'Akko 5075B Plus' },
+                  brand: { type: 'string', nullable: true },
+                  shortDescription: { type: 'string', nullable: true },
+                  description: { type: 'string', nullable: true },
+                  price: { type: 'string', example: '2290000' },
+                  compareAtPrice: { type: 'string', nullable: true },
+                  isActive: { type: 'boolean', default: true },
+                  isFeatured: { type: 'boolean', default: false },
+                  attributes: {
+                    type: 'array',
+                    maxItems: 30,
+                    items: {
+                      type: 'object',
+                      properties: { name: { type: 'string' }, value: { type: 'string' } },
+                    },
+                  },
+                  initialStock: { type: 'integer', default: 0 },
+                  lowStockThreshold: { type: 'integer', default: 5 },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: 'Đã tạo' },
+          400: { description: 'CATEGORY_NOT_LEAF' },
+          409: { description: 'PRODUCT_SKU_EXISTS' },
+        },
+      },
+    },
+    '/admin/products/{id}': {
+      patch: {
+        tags: ['Admin'],
+        summary: 'Sửa sản phẩm (cần product:update)',
+        description:
+          'Không đổi được SKU — đó là định danh đối chiếu với kho và đơn hàng cũ. ' +
+          'Gửi `attributes` sẽ THAY THẾ toàn bộ danh sách thông số cũ.',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: { 200: { description: 'Đã sửa' }, 404: { description: 'PRODUCT_NOT_FOUND' } },
+      },
+      delete: {
+        tags: ['Admin'],
+        summary: 'Xoá mềm sản phẩm (cần product:delete)',
+        description:
+          'Luôn xoá mềm. order_items tham chiếu sản phẩm bằng RESTRICT — xoá cứng sẽ ' +
+          'làm bốc hơi lịch sử mua hàng. SKU vẫn bị giữ chỗ sau khi xoá.',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: {
+          204: { description: 'Đã xoá mềm' },
+          404: { description: 'PRODUCT_NOT_FOUND' },
+        },
+      },
+    },
     '/admin/users': {
       get: {
         tags: ['Admin'],

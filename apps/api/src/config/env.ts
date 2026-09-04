@@ -11,12 +11,22 @@ import { z } from 'zod';
  *
  * Ở production thì ngược lại: biến do nền tảng (Render, Docker, CI) cấp mới là
  * nguồn sự thật, không được để file .env lọt vào image ghi đè lên.
+ *
+ * Môi trường TEST cũng không được ghi đè, và lý do rất cụ thể: tests/helpers/
+ * setup-env.ts đặt NODE_ENV=test, LOG_LEVEL=fatal, BCRYPT_ROUNDS=10 trước khi
+ * mọi thứ khác chạy. Nếu bật override, file .env (có NODE_ENV=development) sẽ
+ * ghi đè ngược lại toàn bộ — và bộ test âm thầm chạy ở chế độ development:
+ * logger bật hết cỡ, bcrypt chậm gấp bốn, và tệ nhất là rate limiter KHÔNG
+ * được tắt nên test tự chạm hạn mức đăng nhập rồi hỏng ngẫu nhiên.
+ *
+ * Nói ngắn gọn: chỉ DEV mới cần .env thắng, vì chỉ dev mới có biến rác của máy.
  */
-const isProductionEnv = process.env.NODE_ENV === 'production';
+const nodeEnvBeforeDotenv = process.env.NODE_ENV;
+const shouldOverride = nodeEnvBeforeDotenv !== 'production' && nodeEnvBeforeDotenv !== 'test';
 
 dotenv.config({
   path: path.resolve(process.cwd(), '.env'),
-  override: !isProductionEnv,
+  override: shouldOverride,
 });
 
 /**

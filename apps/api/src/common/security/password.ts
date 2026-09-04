@@ -25,15 +25,34 @@ export async function verifyPassword(plain: string, hash: string): Promise<boole
 }
 
 /**
- * Băm một chuỗi giả để tiêu tốn đúng lượng thời gian như khi so mật khẩu thật.
+ * Hash giả, sinh bằng ĐÚNG chi phí đang cấu hình.
+ *
+ * Trước đây đây là một chuỗi hash cứng cost 12. Sai lầm tinh vi: chi phí của
+ * hash quyết định thời gian so sánh, nên hash cứng cost 12 mà hệ thống đang
+ * chạy cost 10 sẽ khiến phép so giả tốn GẤP BỐN phép so thật — vẫn là chênh
+ * lệch thời gian đo được, chỉ đảo chiều. Nó chỉ khớp khi BCRYPT_ROUNDS tình cờ
+ * bằng 12.
+ *
+ * Sinh một lần rồi giữ lại, và khởi động sớm ngay khi nạp module để request
+ * đầu tiên không phải trả giá cho lần sinh đó.
+ */
+let dummyHash: Promise<string> | null = null;
+
+function getDummyHash(): Promise<string> {
+  dummyHash ??= bcrypt.hash('mat-khau-gia-de-ton-thoi-gian', env.BCRYPT_ROUNDS);
+  return dummyHash;
+}
+
+// Làm nóng sẵn, không chặn tiến trình khởi động.
+void getDummyHash();
+
+/**
+ * Tiêu tốn đúng lượng thời gian như khi so mật khẩu thật.
  *
  * Dùng khi không tìm thấy email lúc đăng nhập. Không có nó, request với email
  * không tồn tại trả về nhanh hơn hẳn request với email có thật, và kẻ tấn công
  * đo thời gian phản hồi là dò ra được email nào đã đăng ký.
  */
 export async function fakePasswordCompare(): Promise<void> {
-  await bcrypt.compare(
-    'chuoi-gia-de-ton-thoi-gian',
-    '$2a$12$abcdefghijklmnopqrstuu5Vt0kRr2Ug8CBLZ1P2tBB7bZ9k3ZFRy',
-  );
+  await bcrypt.compare('mat-khau-gia-de-ton-thoi-gian', await getDummyHash());
 }

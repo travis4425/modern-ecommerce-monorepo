@@ -3,8 +3,11 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 export interface RequestContext {
   /** Định danh duy nhất của request, dùng để nối mọi dòng log của nó lại. */
   requestId: string;
-  /** Được điền ở Phase 3 sau khi middleware xác thực chạy xong. */
+  /** Được điền sau khi middleware xác thực chạy xong. */
   userId?: string;
+  /** Chụp lại để nhật ký thao tác đọc được cả khi tài khoản đã bị xoá mềm. */
+  userEmail?: string;
+  ipAddress?: string;
 }
 
 const storage = new AsyncLocalStorage<RequestContext>();
@@ -28,8 +31,11 @@ export function getRequestId(): string | undefined {
   return storage.getStore()?.requestId;
 }
 
-/** Gắn userId vào ngữ cảnh hiện tại. Middleware xác thực ở Phase 3 sẽ gọi hàm này. */
-export function setContextUserId(userId: string): void {
+/** Gắn danh tính người dùng vào ngữ cảnh. Middleware xác thực gọi hàm này. */
+export function setContextUser(userId: string, userEmail: string): void {
   const context = storage.getStore();
-  if (context) context.userId = userId;
+  if (context) {
+    context.userId = userId;
+    context.userEmail = userEmail;
+  }
 }

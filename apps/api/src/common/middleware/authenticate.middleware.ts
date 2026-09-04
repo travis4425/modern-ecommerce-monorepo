@@ -2,7 +2,7 @@ import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { ERROR_CODES } from '@ecom/shared';
 import { AppError } from '../errors';
 import { extractBearerToken, verifyAccessToken } from '../security/jwt';
-import { setContextUserId } from '../request-context';
+import { setContextUser } from '../request-context';
 
 /**
  * Bắt buộc phải đăng nhập. Gắn `req.auth` cho các tầng sau.
@@ -25,7 +25,7 @@ export const authenticate: RequestHandler = (req: Request, _res: Response, next:
     const payload = verifyAccessToken(token);
     req.auth = payload;
     // Từ đây, mọi dòng log của request này tự mang theo userId.
-    setContextUserId(payload.sub);
+    setContextUser(payload.sub, payload.email);
     next();
   } catch (error) {
     next(error);
@@ -48,7 +48,7 @@ export const optionalAuthenticate: RequestHandler = (req, _res, next) => {
   try {
     const payload = verifyAccessToken(token);
     req.auth = payload;
-    setContextUserId(payload.sub);
+    setContextUser(payload.sub, payload.email);
   } catch {
     // Token hỏng trên route công khai thì coi như khách vãng lai, không phải lỗi.
   }

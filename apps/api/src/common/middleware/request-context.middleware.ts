@@ -21,7 +21,7 @@ export function requestContextMiddleware(req: Request, res: Response, next: Next
 
   const startedAt = process.hrtime.bigint();
 
-  runWithRequestContext({ requestId }, () => {
+  runWithRequestContext({ requestId, ipAddress: req.ip }, () => {
     res.on('finish', () => {
       const durationMs = Number(process.hrtime.bigint() - startedAt) / 1_000_000;
       const payload = {

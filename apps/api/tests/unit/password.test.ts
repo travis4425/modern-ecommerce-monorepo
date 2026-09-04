@@ -31,6 +31,10 @@ describe('băm mật khẩu', () => {
   it('phép so giả tốn thời gian tương đương phép so thật', async () => {
     const hash = await hashPassword('Password@123');
 
+    // Gọi trước một lần để hash giả được sinh xong, nếu không lần đo đầu tiên
+    // sẽ tính cả thời gian sinh hash chứ không chỉ thời gian so sánh.
+    await fakePasswordCompare();
+
     const t0 = process.hrtime.bigint();
     await fakePasswordCompare();
     const fake = Number(process.hrtime.bigint() - t0) / 1e6;
@@ -41,7 +45,11 @@ describe('băm mật khẩu', () => {
 
     // Không có bước này, request với email không tồn tại trả về nhanh hơn hẳn,
     // và kẻ tấn công đo thời gian là liệt kê được email đã đăng ký.
-    expect(fake / real).toBeGreaterThan(0.3);
-    expect(fake / real).toBeLessThan(3);
+    //
+    // Khoảng cho phép hẹp (0.5–2 lần) là có chủ ý: nó bắt được cả trường hợp
+    // hash giả bị sinh ở chi phí khác với chi phí đang cấu hình — chênh một bậc
+    // bcrypt là gấp đôi thời gian, và test này phải đỏ khi điều đó xảy ra.
+    expect(fake / real).toBeGreaterThan(0.5);
+    expect(fake / real).toBeLessThan(2);
   });
 });

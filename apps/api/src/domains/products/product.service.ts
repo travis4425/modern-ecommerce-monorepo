@@ -6,6 +6,7 @@ import {
 } from '@ecom/shared';
 import { NotFoundError } from '../../common/errors';
 import { buildPaginationMeta, resolvePagination } from '../../common/http/pagination';
+import { toMoneyString, toMoneyStringOrNull } from '../../common/http/money';
 import { productRepository } from './product.repository';
 import type { ListProductsQuery, ProductRawRow } from './product.types';
 
@@ -16,9 +17,9 @@ function toListItem(row: ProductRawRow): ProductListItem {
     name: row.name,
     slug: row.slug,
     brand: row.brand,
-    price: row.price,
-    compareAtPrice: row.compare_at_price,
-    ratingAverage: row.rating_average,
+    price: toMoneyString(row.price),
+    compareAtPrice: toMoneyStringOrNull(row.compare_at_price),
+    ratingAverage: toMoneyString(row.rating_average),
     reviewCount: row.review_count,
     isFeatured: row.is_featured,
     imageUrl: row.image_url,
@@ -53,10 +54,11 @@ export async function getProductBySlug(slug: string): Promise<ProductDetail> {
     name: product.name,
     slug: product.slug,
     brand: product.brand,
-    // Prisma trả Decimal; đổi sang chuỗi để giữ nguyên hợp đồng "tiền là chuỗi".
-    price: String(product.price),
-    compareAtPrice: product.compareAtPrice === null ? null : String(product.compareAtPrice),
-    ratingAverage: String(product.ratingAverage),
+    // Prisma trả Decimal, driver pg trả chuỗi — toMoneyString gộp cả hai về
+    // cùng một định dạng để hai endpoint không mâu thuẫn nhau.
+    price: toMoneyString(product.price),
+    compareAtPrice: toMoneyStringOrNull(product.compareAtPrice),
+    ratingAverage: toMoneyString(product.ratingAverage),
     reviewCount: product.reviewCount,
     isFeatured: product.isFeatured,
     imageUrl: primaryImage?.url ?? null,

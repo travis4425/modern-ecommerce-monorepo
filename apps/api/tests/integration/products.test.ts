@@ -172,7 +172,7 @@ describe('GET /products', () => {
 });
 
 describe('GET /products/:slug', () => {
-  it('trả chi tiết đầy đủ kèm ảnh và thông số', async () => {
+  it('trả chi tiết với đúng hình dạng dữ liệu', async () => {
     const list = await api().get(url('/products?limit=1')).expect(200);
     const slug = list.body.data[0].slug;
 
@@ -183,10 +183,30 @@ describe('GET /products/:slug', () => {
 
     expect(product.slug).toBe(slug);
     expect(Array.isArray(product.images)).toBe(true);
-    expect(product.images.length).toBeGreaterThan(0);
     expect(Array.isArray(product.attributes)).toBe(true);
-    expect(product.attributes.length).toBeGreaterThan(0);
     expect(typeof product.lowStock).toBe('boolean');
+    expect(product.price).toMatch(/^\d+\.\d{2}$/);
+  });
+
+  it('trả đủ ảnh và thông số của sản phẩm có sẵn hai thứ đó', async () => {
+    // CHỌN sản phẩm theo tính chất cần kiểm, không lấy "sản phẩm đầu tiên".
+    //
+    // Các file test tích hợp dùng chung một database và chạy tuần tự, nên
+    // admin-catalog.test.ts tạo ra sản phẩm chưa có ảnh và chúng là mới nhất.
+    // Lấy phần tử đầu danh sách rồi giả định nó có ảnh là buộc file test này
+    // vào thứ tự chạy của file khác.
+    const list = await api().get(url('/products?limit=100')).expect(200);
+    const withImage = list.body.data.find((p: { imageUrl: string | null }) => p.imageUrl !== null);
+    expect(withImage).toBeDefined();
+
+    const response = await api()
+      .get(url(`/products/${withImage.slug}`))
+      .expect(200);
+    const product = response.body.data;
+
+    expect(product.images.length).toBeGreaterThan(0);
+    expect(product.images[0].url).toBe(withImage.imageUrl);
+    expect(product.attributes.length).toBeGreaterThan(0);
   });
 
   it('trả 404 với mã PRODUCT_NOT_FOUND', async () => {

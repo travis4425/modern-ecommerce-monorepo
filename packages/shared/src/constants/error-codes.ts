@@ -57,6 +57,15 @@ export const ERROR_CODES = {
   // ── Catalog ─────────────────────────────────────────────────────────────
   CATEGORY_NOT_FOUND: 'CATEGORY_NOT_FOUND',
   PRODUCT_NOT_FOUND: 'PRODUCT_NOT_FOUND',
+  /** Cây danh mục chỉ có hai cấp: không thể đặt danh mục con làm cha. */
+  CATEGORY_DEPTH_EXCEEDED: 'CATEGORY_DEPTH_EXCEEDED',
+  /** Không thể xoá danh mục đang còn danh mục con. */
+  CATEGORY_HAS_CHILDREN: 'CATEGORY_HAS_CHILDREN',
+  /** Không thể xoá danh mục đang còn sản phẩm. */
+  CATEGORY_HAS_PRODUCTS: 'CATEGORY_HAS_PRODUCTS',
+  /** Không thể gán sản phẩm vào danh mục cha — sản phẩm chỉ thuộc danh mục lá. */
+  CATEGORY_NOT_LEAF: 'CATEGORY_NOT_LEAF',
+  PRODUCT_SKU_EXISTS: 'PRODUCT_SKU_EXISTS',
 } as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];

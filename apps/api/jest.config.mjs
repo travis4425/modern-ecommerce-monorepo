@@ -39,6 +39,10 @@ export default {
       rootDir: '.',
       testMatch: ['<rootDir>/tests/integration/**/*.test.ts'],
       setupFiles: ['<rootDir>/tests/helpers/setup-env.ts'],
+      // Kiểm tra database MỘT LẦN trước khi chạy. Không có bước này, database
+      // không nối được biểu hiện thành hàng chục dòng "expected 200, got 500"
+      // chẳng nói lên điều gì.
+      globalSetup: '<rootDir>/tests/helpers/ensure-database.ts',
       // Test tích hợp dùng chung một database nên phải chạy tuần tự, nếu không
       // chúng xoá dữ liệu của nhau giữa chừng.
       maxWorkers: 1,

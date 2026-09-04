@@ -100,6 +100,14 @@ Mã lỗi mới phải thêm vào `packages/shared/src/constants/error-codes.ts`
   với mảng đã `sort()`. Khẳng định TÍNH CHẤT: tổng các tập con bằng tập cha, dãy
   không giảm, `totalPages` khớp công thức. Con số cứng sẽ vỡ ngay lần đầu seed đổi,
   và test đỏ vì lý do vô nghĩa thì sớm muộn cũng bị bỏ qua.
+- **Test tích hợp dùng CHUNG một database và chạy tuần tự.** Không bao giờ lấy
+  "phần tử đầu tiên" rồi giả định nó có tính chất nào đó — file test khác có thể
+  vừa tạo dữ liệu mới nhất không thoả tính chất ấy. Luôn CHỌN bản ghi theo đúng
+  tính chất cần kiểm.
+- **Cấu hình môi trường test phải thắng file `.env`, và `.env` phải thắng biến rác
+  của máy.** Thứ tự đó nằm ở `tests/helpers/setup-env.ts`; `src/config/env.ts`
+  không bật override khi `NODE_ENV=test`. Sai thứ tự này đã hai lần làm cả bộ
+  test chạy sai chế độ.
 - **Logger phải tắt transport ở môi trường test.** `enabled: false` của pino không
   chặn được `pino-pretty` vì transport chạy ở worker thread riêng — output test sẽ
   dài hàng nghìn dòng và nhấn chìm tên test hỏng.
