@@ -91,6 +91,18 @@ Mã lỗi mới phải thêm vào `packages/shared/src/constants/error-codes.ts`
   nếu không một `DATABASE_URL` sót lại ở cấp máy sẽ âm thầm chiếm chỗ.
 - **`z.coerce.boolean()` coi chuỗi `'false'` là `true`.** Tham số boolean trên query
   string phải dùng `z.enum(['true','false'])` rồi transform.
+- **Không để `ORDER BY` của database quyết định thứ tự hiển thị cho người đọc.**
+  Collation khác nhau giữa máy dev, image Docker (musl khác glibc) và production,
+  nên cùng một endpoint trả về thứ tự khác nhau ở mỗi nơi. Sắp xếp ở tầng service
+  bằng `compareForDisplay` (Intl.Collator 'vi'). ORDER BY trong SQL chỉ dùng để
+  phân trang ổn định, và luôn kèm tie-breaker `id`.
+- **Test không khẳng định con số lấy từ seed** (`total === 38`) và không so sánh sâu
+  với mảng đã `sort()`. Khẳng định TÍNH CHẤT: tổng các tập con bằng tập cha, dãy
+  không giảm, `totalPages` khớp công thức. Con số cứng sẽ vỡ ngay lần đầu seed đổi,
+  và test đỏ vì lý do vô nghĩa thì sớm muộn cũng bị bỏ qua.
+- **Logger phải tắt transport ở môi trường test.** `enabled: false` của pino không
+  chặn được `pino-pretty` vì transport chạy ở worker thread riêng — output test sẽ
+  dài hàng nghìn dòng và nhấn chìm tên test hỏng.
 
 ## Cảnh báo bảo mật phải không có báo động giả
 
