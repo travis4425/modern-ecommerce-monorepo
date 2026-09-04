@@ -260,6 +260,30 @@ Chi tiết khác:
   `PUT /admin/products/:id/images/order`,
   `PUT|PATCH|DELETE /admin/products/:id/images/:imageId`.
 
+## Frontend
+
+Bộ khung ở `apps/web`: React Router, Tailwind v4, TanStack Query, react-i18next.
+
+**Design token khai báo một lần** trong khối `@theme` của `src/index.css`. Tailwind v4
+không dùng `tailwind.config.js` nữa — mỗi biến CSS ở đó tự sinh ra tiện ích tương ứng
+(`--color-brand-500` → `bg-brand-500`, `text-brand-500`, `border-brand-500`). Đổi tông
+thương hiệu là sửa đúng một khối, không phải đi tìm mã màu khắp nơi.
+
+**Song ngữ, và trình biên dịch giữ cho nó đúng.** Ba lớp ràng buộc:
+
+| Ràng buộc                                | Bắt được gì                                   |
+| ---------------------------------------- | --------------------------------------------- |
+| `i18n/i18next.d.ts`                      | `t('home.titlee')` — gõ sai khoá              |
+| `en: Dictionary` (suy từ bản tiếng Việt) | Bản dịch thiếu khoá, hoặc thừa khoá đã bỏ     |
+| `errors: Record<ErrorCode, string>`      | Thêm mã lỗi ở backend mà quên dịch ở frontend |
+
+Cả ba đều nổ lúc `pnpm typecheck`, không đợi tới lúc người dùng nhìn thấy chuỗi
+`PRODUCT_NOT_FOUND` giữa giao diện tiếng Việt.
+
+**Lỗi hiển thị luôn tra theo `error.code`.** Trường `message` mà backend trả về viết cho
+lập trình viên đọc log — nó có thể chứa tên bảng, tên cột — nên không bao giờ đem hiển
+thị. `useErrorMessage()` là cửa duy nhất đổi lỗi thành câu người đọc được.
+
 ## Quy ước commit
 
 Dự án dùng [Conventional Commits](https://www.conventionalcommits.org/), được `commitlint` kiểm tra tự động qua Git hook.
@@ -281,8 +305,9 @@ scope: api | web | shared | db | auth | catalog | cart | order | admin | infra |
 | 3a    | Auth, refresh token rotation, RBAC                 | ✅ xong    |
 | 3b    | Quên/đặt lại mật khẩu qua email, bộ test Jest      | ✅ xong    |
 | 4a    | API catalog công khai, full-text search tiếng Việt | ✅ xong    |
-| 4b    | CRUD admin sản phẩm/danh mục, upload Cloudinary    | ⏳         |
-| 5     | Bộ khung frontend, design tokens, i18n             | ⏳         |
+| 4b    | CRUD admin sản phẩm/danh mục, nhật ký thao tác     | ✅ xong    |
+| 4c    | Upload ảnh sản phẩm (đĩa hoặc Cloudinary)          | ✅ xong    |
+| 5     | Bộ khung frontend, design tokens, i18n             | ✅ xong    |
 | 6     | Hành trình khách vãng lai                          | ⏳         |
 | 7     | Auth frontend, hợp nhất giỏ hàng, hồ sơ            | ⏳         |
 | 8     | Checkout, coupon, transaction đặt hàng             | ⏳         |

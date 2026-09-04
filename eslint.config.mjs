@@ -1,6 +1,7 @@
 import js from '@eslint/js';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
+import reactHooks from 'eslint-plugin-react-hooks';
 import prettier from 'eslint-config-prettier';
 
 export default tseslint.config(
@@ -47,6 +48,19 @@ export default tseslint.config(
     languageOptions: {
       globals: { ...globals.browser },
     },
+  },
+
+  // Quy tắc hook của React. Hai lỗi mà chỉ máy mới thấy được: gọi hook trong
+  // nhánh điều kiện, và mảng phụ thuộc thiếu biến (đóng gói giá trị cũ lại rồi
+  // hiển thị dữ liệu của lần render trước mà không báo gì).
+  //
+  // Dùng `configs.flat.recommended`, KHÔNG dùng `configs['recommended-latest']`:
+  // ở plugin v7 chỉ nhánh `flat` mới đúng định dạng flat config, còn hai cái
+  // kia vẫn là eslintrc cũ (`plugins` là mảng chuỗi) và ESLint 9 từ chối thẳng
+  // với thông báo không nói rõ nguyên nhân.
+  {
+    files: ['apps/web/**/*.{ts,tsx}'],
+    ...reactHooks.configs.flat.recommended,
   },
 
   // File cấu hình viết theo CommonJS (commitlint, lint-staged...)

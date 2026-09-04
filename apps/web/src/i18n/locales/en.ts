@@ -1,0 +1,119 @@
+import { ERROR_CODES, type ErrorCode } from '@ecom/shared';
+import type { Dictionary } from './dictionary';
+
+const errors: Record<ErrorCode, string> = {
+  [ERROR_CODES.INTERNAL_SERVER_ERROR]: 'Something went wrong on our side. Please try again.',
+  [ERROR_CODES.SERVICE_UNAVAILABLE]: 'The service is temporarily unavailable. Please try again.',
+  [ERROR_CODES.ROUTE_NOT_FOUND]: 'That endpoint does not exist on the server.',
+  [ERROR_CODES.RECORD_NOT_FOUND]: 'We could not find what you asked for.',
+  [ERROR_CODES.VALIDATION_FAILED]: 'Some of the data you sent is not valid.',
+  [ERROR_CODES.MALFORMED_JSON]: 'The request body is not valid JSON.',
+  [ERROR_CODES.PAYLOAD_TOO_LARGE]: 'The request body is too large.',
+  [ERROR_CODES.RATE_LIMIT_EXCEEDED]: 'You are going a bit fast. Wait a moment and try again.',
+  [ERROR_CODES.UNIQUE_CONSTRAINT_VIOLATION]: 'That value already exists.',
+  [ERROR_CODES.FOREIGN_KEY_CONSTRAINT_VIOLATION]:
+    'This record is referenced elsewhere, so the action cannot be completed.',
+
+  [ERROR_CODES.AUTH_EMAIL_ALREADY_EXISTS]: 'That email is already registered.',
+  [ERROR_CODES.AUTH_INVALID_CREDENTIALS]: 'Email or password is incorrect.',
+  [ERROR_CODES.AUTH_ACCOUNT_DISABLED]: 'This account has been disabled.',
+  [ERROR_CODES.AUTH_TOKEN_MISSING]: 'Please sign in to continue.',
+  [ERROR_CODES.AUTH_TOKEN_INVALID]: 'Your session is not valid.',
+  [ERROR_CODES.AUTH_TOKEN_EXPIRED]: 'Your session has expired.',
+  [ERROR_CODES.AUTH_REFRESH_TOKEN_MISSING]: 'No active session was found.',
+  [ERROR_CODES.AUTH_REFRESH_TOKEN_INVALID]: 'Your session is no longer valid.',
+  [ERROR_CODES.AUTH_REFRESH_TOKEN_EXPIRED]: 'Your session expired. Please sign in again.',
+  [ERROR_CODES.AUTH_REFRESH_TOKEN_REUSED]:
+    'For your safety, every session has been revoked. Please sign in again.',
+  [ERROR_CODES.AUTH_RESET_TOKEN_INVALID]: 'This password reset link is not valid.',
+  [ERROR_CODES.AUTH_RESET_TOKEN_EXPIRED]: 'This password reset link has expired.',
+  [ERROR_CODES.AUTH_INSUFFICIENT_PERMISSION]: 'You do not have permission to do that.',
+
+  [ERROR_CODES.CATEGORY_NOT_FOUND]: 'Category not found.',
+  [ERROR_CODES.PRODUCT_NOT_FOUND]: 'Product not found.',
+  [ERROR_CODES.CATEGORY_DEPTH_EXCEEDED]: 'The category tree is only two levels deep.',
+  [ERROR_CODES.CATEGORY_HAS_CHILDREN]: 'This category still has subcategories.',
+  [ERROR_CODES.CATEGORY_HAS_PRODUCTS]: 'This category still has products.',
+  [ERROR_CODES.CATEGORY_NOT_LEAF]: 'Products can only go into a leaf category.',
+  [ERROR_CODES.PRODUCT_SKU_EXISTS]: 'That SKU is already in use.',
+
+  [ERROR_CODES.UPLOAD_FILE_MISSING]: 'No file was selected.',
+  [ERROR_CODES.UPLOAD_FILE_TOO_LARGE]: 'The file is larger than the limit.',
+  [ERROR_CODES.UPLOAD_FILE_TYPE_UNSUPPORTED]: 'Only JPEG, PNG, WebP or AVIF images are accepted.',
+  [ERROR_CODES.UPLOAD_TOO_MANY_FILES]: 'Send exactly one file at a time.',
+  [ERROR_CODES.UPLOAD_STORAGE_FAILED]: 'Saving the image failed. Please try again.',
+  [ERROR_CODES.PRODUCT_IMAGE_NOT_FOUND]: 'Image not found.',
+  [ERROR_CODES.PRODUCT_IMAGE_LIMIT_REACHED]:
+    'This product already has the maximum number of images.',
+  [ERROR_CODES.PRODUCT_IMAGE_ORDER_MISMATCH]: 'The order list does not match the current images.',
+};
+
+/**
+ * Chú thích kiểu `Dictionary` là chốt chặn: thiếu một khoá hay thừa một khoá so
+ * với bản tiếng Việt đều là lỗi biên dịch. Hai bản dịch không thể trôi khỏi nhau
+ * theo thời gian — thứ luôn xảy ra khi chúng chỉ là hai file JSON rời.
+ */
+export const en: Dictionary = {
+  common: {
+    appName: 'E-Commerce',
+    tagline: 'Keyboards, mice and accessories for your desk',
+    loading: 'Loading…',
+    retry: 'Try again',
+    language: 'Language',
+    skipToContent: 'Skip to main content',
+    unreachable: 'Cannot reach the server.',
+  },
+  nav: {
+    home: 'Home',
+    system: 'System status',
+  },
+  home: {
+    eyebrow: 'Phase 5 · Application shell',
+    title: 'E-Commerce Platform',
+    subtitle:
+      'The shell is in place: routing, design tokens, two languages and the API layer. Real product listings arrive in the next phase.',
+    ctaPrimary: 'Check system status',
+    ctaSecondary: 'API documentation',
+    featuresTitle: 'What the shell already gives you',
+    featureRouterTitle: 'Routing',
+    featureRouterBody: 'React Router with a shared layout, a real 404 page and an error boundary.',
+    featureTokensTitle: 'Design tokens',
+    featureTokensBody: 'Colour, radius and shadow declared once in the Tailwind v4 @theme block.',
+    featureI18nTitle: 'Two languages',
+    featureI18nBody: 'Vietnamese and English, switched from the header, remembered per browser.',
+    featureQueryTitle: 'Data layer',
+    featureQueryBody:
+      'TanStack Query over an API client that turns backend error codes into words.',
+  },
+  system: {
+    eyebrow: 'Diagnostics',
+    title: 'System status',
+    subtitle: 'This page checks every link in the chain, from the browser down to the database.',
+    frontend: 'Frontend',
+    backend: 'Backend API',
+    database: 'PostgreSQL',
+    seed: 'Seed data',
+    sharedTypes: 'Shared types',
+    checking: 'checking…',
+    notConnected: 'not connected',
+    notSeeded: 'not seeded',
+    catalogSummary: '{{categories}} categories · {{products}} products',
+    latency: '{{ms}} ms',
+    hint: 'The API did not answer. Check that `pnpm dev` is running.',
+    diagnosticTitle: 'Why PostgreSQL is red',
+    diagnosticHint:
+      'Run `docker compose ps` to see the container, then `pnpm db:up` if it is down.',
+  },
+  notFound: {
+    code: '404',
+    title: 'This page does not exist',
+    body: 'The address you opened is not a page here, or the content has moved.',
+    back: 'Back to home',
+  },
+  errorBoundary: {
+    title: 'Something broke',
+    body: 'The interface hit an unexpected error. Reloading the page usually clears it.',
+    reload: 'Reload the page',
+  },
+  errors,
+};

@@ -14,12 +14,12 @@ Dự án: nền tảng E-Commerce full-stack, pnpm monorepo, React + Vite / Expr
 
 ## Skill Gaps — sẽ tạo trong quá trình làm
 
-| Skill dự kiến                 | Phase | Nội dung                                                           |
-| ----------------------------- | ----- | ------------------------------------------------------------------ |
-| `ecommerce-order-transaction` | 8, 9  | Khoá tồn kho, idempotency, rollback, hoàn kho khi huỷ đơn          |
-| `jwt-refresh-rotation`        | 3     | Rotation, revoke, phát hiện tái sử dụng token, interceptor phía FE |
-| `error-code-i18n-contract`    | 2, 5  | Hợp đồng mã lỗi giữa backend và bảng dịch frontend                 |
-| `react-i18n-setup`            | 5     | Dựng react-i18next, tách namespace, chặn hardcode chuỗi            |
+| Skill dự kiến                  | Phase | Nội dung                                                                |
+| ------------------------------ | ----- | ----------------------------------------------------------------------- |
+| `ecommerce-order-transaction`  | 8, 9  | Khoá tồn kho, idempotency, rollback, hoàn kho khi huỷ đơn               |
+| `jwt-refresh-rotation`         | 3     | Rotation, revoke, phát hiện tái sử dụng token, interceptor phía FE      |
+| ~~`error-code-i18n-contract`~~ | 5     | ✅ Đã làm ở Phase 5 — `Record<ErrorCode, string>` bắt lỗi lúc biên dịch |
+| ~~`react-i18n-setup`~~         | 5     | ✅ Đã làm ở Phase 5 — xem `apps/web/src/i18n/`                          |
 
 ---
 
@@ -61,6 +61,22 @@ routes → controller → service → repository → database
 - Validate ở tầng route bằng Zod. Service được quyền tin rằng input đã sạch.
 - Kiểu và schema dùng chung đặt ở `packages/shared`, không khai báo lặp hai đầu.
 - Không ném chuỗi hay object trần. Luôn ném lớp kế thừa `AppError`.
+
+**Frontend**
+
+- Không có chuỗi hiển thị nào viết thẳng trong JSX. Mọi chữ đi qua `t()`, và
+  `i18n/i18next.d.ts` biến khoá dịch thành KIỂU — gõ sai khoá là lỗi biên dịch.
+- Bản tiếng Anh khai kiểu `Dictionary` (suy ra từ bản tiếng Việt), nên hai bộ từ
+  điển không thể thiếu hoặc thừa khoá so với nhau.
+- Bảng `errors` khai kiểu `Record<ErrorCode, string>`: thêm mã lỗi ở
+  `packages/shared` mà quên dịch thì `pnpm typecheck` đỏ.
+- Màu, bo góc, bóng đổ chỉ khai báo trong khối `@theme` của `apps/web/src/index.css`.
+  Cấm mã màu thô (`#1f6f5c`, `rgb(...)`) trong component — dùng token `brand-500`,
+  `ink-muted`, `line`, `rounded-card`, `shadow-card`.
+- Kiểu dáng lặp lại thì tách thành component ở `components/ui/`, không sao chép
+  chuỗi class Tailwind giữa các trang.
+- Lỗi hiển thị cho người dùng lấy từ `useErrorMessage()`, không bao giờ lấy
+  `error.message` của backend — trường đó viết cho log và có thể lộ tên bảng.
 
 **Tệp người dùng gửi lên**
 
@@ -139,6 +155,18 @@ Mã lỗi mới phải thêm vào `packages/shared/src/constants/error-codes.ts`
   và trỏ `UPLOAD_DIR` vào thư mục tạm; `test-environment.test.ts` khẳng định lại
   cả hai. Không có chốt này, một lần `pnpm test` trên máy có cấu hình thật sẽ rải
   ảnh rác lên tài khoản đó.
+- **`eslint-plugin-react-hooks` v7: chỉ nhánh `configs.flat.*` là flat config.**
+  `configs['recommended-latest']` vẫn ở định dạng eslintrc (`plugins` là mảng
+  chuỗi) và ESLint 9 từ chối chạy với thông báo không nói rõ nguyên nhân.
+- **`NavLink` tới `/` phải có `end`.** Không có nó, React Router coi `/` là tiền
+  tố của mọi đường dẫn nên liên kết Trang chủ sáng ở khắp nơi.
+- **Route `*` phải là phần tử CUỐI trong mảng `children`.** Nó khớp mọi đường
+  dẫn; đặt sớm hơn thì các route thật phía sau không bao giờ tới lượt.
+- **Không tự đặt `Content-Type` khi gửi `FormData`.** Trình duyệt phải tự sinh
+  header đó kèm chuỗi boundary; đặt tay là hỏng toàn bộ phần multipart.
+- **`import './i18n'` phải đứng trước `App` trong `main.tsx`.** Component đầu
+  tiên gọi `useTranslation()` cần instance đã init, nếu không lần render đầu
+  hiện khoá dịch thay vì bản dịch.
 - **Logger phải tắt transport ở môi trường test.** `enabled: false` của pino không
   chặn được `pino-pretty` vì transport chạy ở worker thread riêng — output test sẽ
   dài hàng nghìn dòng và nhấn chìm tên test hỏng.
