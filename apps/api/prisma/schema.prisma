@@ -112,7 +112,10 @@ model RolePermission {
 
 model User {
   id              String    @id @default(uuid()) @db.Uuid
-  email           String    @unique @db.VarChar(255)
+  /// citext = so sánh không phân biệt hoa thường ở tầng database. Nhờ vậy
+  /// 'Travis@Example.com' và 'travis@example.com' là CÙNG một tài khoản, và
+  /// unique index bên dưới tự chặn việc đăng ký trùng.
+  email           String    @unique @db.Citext
   passwordHash    String    @map("password_hash") @db.VarChar(255)
   fullName        String    @map("full_name") @db.VarChar(120)
   phone           String?   @db.VarChar(20)
@@ -214,6 +217,9 @@ model Category {
   imageUrl    String?   @map("image_url") @db.VarChar(500)
   sortOrder   Int       @default(0) @map("sort_order")
   isActive    Boolean   @default(true) @map("is_active")
+  /// Cột generated cho tìm kiếm. Xem migration 20260904020000_category_search_vector:
+  /// tên sản phẩm là mã model nên phải tìm được cả theo tên danh mục.
+  searchVector Unsupported("tsvector")? @map("search_vector")
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(6)
@@ -247,6 +253,11 @@ model Product {
   /// cùng transaction với thao tác tạo/sửa/xoá review (Phase 9).
   ratingAverage    Decimal   @default(0) @map("rating_average") @db.Decimal(3, 2)
   reviewCount      Int       @default(0) @map("review_count")
+  /// Cột generated do Postgres tự duy trì, phục vụ tìm kiếm toàn văn không dấu.
+  /// Prisma không diễn đạt được biểu thức sinh cột lẫn index GIN, nên cả hai
+  /// nằm trong migration 20260903090000_catalog_search. Khai báo ở đây để
+  /// Prisma biết cột tồn tại và không coi là drift.
+  searchVector     Unsupported("tsvector")? @map("search_vector")
   createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt        DateTime? @map("deleted_at") @db.Timestamptz(6)

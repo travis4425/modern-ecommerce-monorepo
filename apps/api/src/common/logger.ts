@@ -44,7 +44,12 @@ export const logger = pino({
   },
 
   // Ở production ghi JSON một dòng để máy đọc. Ở dev in ra dạng người đọc được.
-  ...(isProduction
+  //
+  // Môi trường TEST phải đi cùng nhánh với production, tức KHÔNG gắn transport.
+  // `enabled: false` ở trên không chặn được pino-pretty: transport chạy ở worker
+  // thread riêng và vẫn in ra bình thường. Hậu quả là output của một lần chạy
+  // test dài hàng nghìn dòng, nhấn chìm đúng phần cần đọc là tên test hỏng.
+  ...(isProduction || isTest
     ? {}
     : {
         transport: {

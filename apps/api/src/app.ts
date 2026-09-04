@@ -12,6 +12,7 @@ import { errorHandlerMiddleware } from './common/middleware/error-handler.middle
 import { openApiDocument } from './docs/openapi';
 import healthRoutes from './domains/health/health.routes';
 import categoryRoutes from './domains/categories/category.routes';
+import productRoutes from './domains/products/product.routes';
 import authRoutes from './domains/auth/auth.routes';
 import userRoutes from './domains/users/user.routes';
 
@@ -83,6 +84,7 @@ export function createApp(): Express {
   app.use(API_PREFIX, healthRoutes);
   app.use(API_PREFIX, authRoutes);
   app.use(API_PREFIX, categoryRoutes);
+  app.use(API_PREFIX, productRoutes);
   app.use(API_PREFIX, userRoutes);
 
   // ── Kết thúc chuỗi ────────────────────────────────────────

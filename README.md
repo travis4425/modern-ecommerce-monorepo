@@ -2,7 +2,7 @@
 
 Nền tảng thương mại điện tử full-stack, xây theo hướng production-ready: phân tầng rõ ràng ở backend, kiểu dữ liệu dùng chung giữa hai đầu, đa ngôn ngữ EN/VI, và kiểm thử tự động.
 
-> **Trạng thái:** Phase 3/11 — xác thực đầy đủ, phân quyền, đặt lại mật khẩu qua email, 70 test unit.
+> **Trạng thái:** Phase 4a/11 — API catalog công khai với tìm kiếm tiếng Việt không dấu, 94 test unit.
 
 ---
 
@@ -211,6 +211,29 @@ Email song ngữ theo header `Accept-Language`. Ở dev, **không cần cấu h�
 [Mailtrap](https://mailtrap.io) miễn phí và điền SMTP vào `.env` — mọi email sẽ nằm lại
 trong hộp thư Mailtrap, không bao giờ bay tới người thật.
 
+## Tìm kiếm sản phẩm
+
+Tìm kiếm toàn văn **không phân biệt dấu**: gõ `ban phim` tìm được `Bàn phím`.
+
+Cách làm: cột `search_vector` kiểu `tsvector` được Postgres **tự sinh** từ tên, thương
+hiệu, SKU và mô tả ngắn — cột generated, không phải trigger, nên chỉ mục không bao giờ
+lệch với dữ liệu. Dấu tiếng Việt được bỏ qua hàm `immutable_unaccent`. Chỉ mục GIN phục
+vụ truy vấn.
+
+`setweight` xếp hạng: khớp ở **tên** (hạng A) luôn đứng trên khớp ở **mô tả** (hạng C).
+
+Dùng cấu hình `simple` chứ không phải `english`: Postgres không có bộ stemmer tiếng
+Việt, và stemmer tiếng Anh sẽ cắt sai từ tiếng Việt.
+
+Truy vấn danh sách viết bằng SQL thô có tham số hoá — nó cần `websearch_to_tsquery`,
+`LATERAL JOIN` để lấy đúng một ảnh đại diện, và `COUNT(*) OVER()` để có tổng số dòng
+mà không phải chạy thêm truy vấn đếm. Prisma không diễn đạt được những thứ đó. Mọi giá
+trị người dùng nhập đều đi qua tham số `$1..$8` của driver; chỉ mệnh đề `ORDER BY` được
+nối chuỗi, và nó chỉ nhận giá trị từ một bảng hằng.
+
+**Tiền luôn là chuỗi trong JSON.** `numeric(12,2)` vượt độ chính xác an toàn của số dấu
+phẩy động JavaScript, nên chuyển sang `number` là mở đường cho sai số.
+
 ## Quy ước commit
 
 Dự án dùng [Conventional Commits](https://www.conventionalcommits.org/), được `commitlint` kiểm tra tự động qua Git hook.
@@ -224,21 +247,22 @@ scope: api | web | shared | db | auth | catalog | cart | order | admin | infra |
 
 ## Lộ trình
 
-| Phase | Nội dung                                         | Trạng thái |
-| ----- | ------------------------------------------------ | ---------- |
-| 0     | Monorepo, Docker, hàng rào chất lượng code       | ✅ xong    |
-| 1     | Thiết kế database, Prisma schema, seed           | ✅ xong    |
-| 2     | Kernel backend: BaseRepository, AppError, logger | ✅ xong    |
-| 3a    | Auth, refresh token rotation, RBAC               | ✅ xong    |
-| 3b    | Quên/đặt lại mật khẩu qua email, bộ test Jest    | ✅ xong    |
-| 4     | API catalog, upload ảnh, full-text search        | ⏳         |
-| 5     | Bộ khung frontend, design tokens, i18n           | ⏳         |
-| 6     | Hành trình khách vãng lai                        | ⏳         |
-| 7     | Auth frontend, hợp nhất giỏ hàng, hồ sơ          | ⏳         |
-| 8     | Checkout, coupon, transaction đặt hàng           | ⏳         |
-| 9     | Lịch sử đơn, huỷ đơn, đánh giá                   | ⏳         |
-| 10    | Khu vực Staff và Admin                           | ⏳         |
-| 11    | Kiểm thử, tài liệu, CI/CD, deploy                | ⏳         |
+| Phase | Nội dung                                           | Trạng thái |
+| ----- | -------------------------------------------------- | ---------- |
+| 0     | Monorepo, Docker, hàng rào chất lượng code         | ✅ xong    |
+| 1     | Thiết kế database, Prisma schema, seed             | ✅ xong    |
+| 2     | Kernel backend: BaseRepository, AppError, logger   | ✅ xong    |
+| 3a    | Auth, refresh token rotation, RBAC                 | ✅ xong    |
+| 3b    | Quên/đặt lại mật khẩu qua email, bộ test Jest      | ✅ xong    |
+| 4a    | API catalog công khai, full-text search tiếng Việt | ✅ xong    |
+| 4b    | CRUD admin sản phẩm/danh mục, upload Cloudinary    | ⏳         |
+| 5     | Bộ khung frontend, design tokens, i18n             | ⏳         |
+| 6     | Hành trình khách vãng lai                          | ⏳         |
+| 7     | Auth frontend, hợp nhất giỏ hàng, hồ sơ            | ⏳         |
+| 8     | Checkout, coupon, transaction đặt hàng             | ⏳         |
+| 9     | Lịch sử đơn, huỷ đơn, đánh giá                     | ⏳         |
+| 10    | Khu vực Staff và Admin                             | ⏳         |
+| 11    | Kiểm thử, tài liệu, CI/CD, deploy                  | ⏳         |
 
 ## Giấy phép
 

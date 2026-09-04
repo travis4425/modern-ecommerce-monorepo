@@ -296,6 +296,76 @@ export const openApiDocument = {
         },
       },
     },
+    '/products': {
+      get: {
+        tags: ['Catalog'],
+        summary: 'Danh sách sản phẩm: tìm kiếm, lọc, sắp xếp, phân trang',
+        description:
+          'Tìm kiếm toàn văn KHÔNG PHÂN BIỆT DẤU: gõ "ban phim" tìm được "Bàn phím". ' +
+          'Kết quả khớp ở tên sản phẩm được xếp trên kết quả chỉ khớp ở mô tả. ' +
+          'Lọc theo danh mục cha sẽ lấy cả sản phẩm thuộc các danh mục con. ' +
+          'Mọi giá trị tiền trả về dưới dạng CHUỖI để không mất chính xác.',
+        parameters: [
+          { name: 'q', in: 'query', schema: { type: 'string' }, example: 'ban phim' },
+          { name: 'category', in: 'query', schema: { type: 'string' }, example: 'ban-phim-co' },
+          { name: 'minPrice', in: 'query', schema: { type: 'string' }, example: '1000000' },
+          { name: 'maxPrice', in: 'query', schema: { type: 'string' }, example: '5000000' },
+          { name: 'brand', in: 'query', schema: { type: 'string' }, example: 'Logitech' },
+          { name: 'inStock', in: 'query', schema: { type: 'string', enum: ['true', 'false'] } },
+          {
+            name: 'sort',
+            in: 'query',
+            schema: {
+              type: 'string',
+              enum: [
+                'relevance',
+                'price',
+                '-price',
+                'created_at',
+                '-created_at',
+                'rating',
+                'name',
+                '-name',
+              ],
+              default: 'relevance',
+            },
+          },
+          { name: 'page', in: 'query', schema: { type: 'integer', default: 1 } },
+          { name: 'limit', in: 'query', schema: { type: 'integer', default: 20, maximum: 100 } },
+        ],
+        responses: {
+          200: { description: 'Danh sách kèm meta phân trang' },
+          422: { description: 'VALIDATION_FAILED' },
+        },
+      },
+    },
+    '/products/brands': {
+      get: {
+        tags: ['Catalog'],
+        summary: 'Danh sách thương hiệu đang bán, để dựng bộ lọc',
+        responses: { 200: { description: 'Mảng chuỗi đã sắp xếp' } },
+      },
+    },
+    '/products/{slug}': {
+      get: {
+        tags: ['Catalog'],
+        summary: 'Chi tiết sản phẩm',
+        parameters: [
+          {
+            name: 'slug',
+            in: 'path',
+            required: true,
+            schema: { type: 'string' },
+            example: 'akko-3068b-plus-world-tour-tokyo',
+          },
+        ],
+        responses: {
+          200: { description: 'Chi tiết kèm ảnh, thông số kỹ thuật và tồn kho' },
+          404: { description: 'PRODUCT_NOT_FOUND' },
+          422: { description: 'Slug sai định dạng' },
+        },
+      },
+    },
     '/categories': {
       get: {
         tags: ['Catalog'],
