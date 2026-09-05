@@ -5,6 +5,7 @@ import { LanguageSwitcher } from '../ui/LanguageSwitcher';
 
 const LINKS = [
   { to: '/', labelKey: 'nav.home' },
+  { to: '/products', labelKey: 'nav.products' },
   { to: '/system', labelKey: 'nav.system' },
 ] as const;
 

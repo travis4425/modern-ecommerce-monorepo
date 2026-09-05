@@ -36,6 +36,12 @@ void i18n
       caches: ['localStorage'],
       lookupLocalStorage: LANGUAGE_STORAGE_KEY,
     },
+    /**
+     * LƯU Ý về tên biến nội suy: `count` là từ khoá của i18next — nó dùng để
+     * chọn dạng số nhiều nên bắt buộc phải là number. Chuỗi đã định dạng theo
+     * locale ('1.234') không lọt qua được, và lỗi hiện ra ở tầng kiểu chứ không
+     * phải lúc chạy. Đặt tên khác: `total`, `quantity`, `reviews`.
+     */
     interpolation: {
       // React đã tự chống XSS khi render, escape thêm một lần nữa chỉ làm dấu
       // nháy và dấu & hiện ra thành &#39; &amp; giữa giao diện.

@@ -2,6 +2,8 @@ import { createBrowserRouter } from 'react-router-dom';
 import { RootLayout } from '../components/layout/RootLayout';
 import { AppErrorBoundary } from '../components/layout/AppErrorBoundary';
 import HomePage from '../routes/HomePage';
+import ProductsPage from '../routes/ProductsPage';
+import ProductDetailPage from '../routes/ProductDetailPage';
 import SystemStatusPage from '../routes/SystemStatusPage';
 import NotFoundPage from '../routes/NotFoundPage';
 
@@ -11,8 +13,9 @@ import NotFoundPage from '../routes/NotFoundPage';
  * `errorElement` gắn ở gốc: mọi lỗi khi render hay khi loader chạy đều rơi vào
  * đó thay vì để lại màn hình trắng.
  *
- * Route '*' phải là phần tử CUỐI trong danh sách con — nó khớp mọi đường dẫn,
- * đặt sớm hơn thì các route thật phía sau không bao giờ tới lượt.
+ * '/products' phải khai TRƯỚC '/products/:slug' — React Router v7 chọn theo độ
+ * cụ thể chứ không theo thứ tự, nhưng giữ đúng thứ tự vẫn giúp người đọc thấy
+ * ngay cấu trúc. Route '*' thì bắt buộc nằm CUỐI mảng children.
  *
  * Phase 7 sẽ bọc nhánh cần đăng nhập bằng một route <RequireAuth>; chỗ đó nằm
  * trong mảng children này, không phải rắc điều kiện vào từng trang.
@@ -24,6 +27,8 @@ export const router = createBrowserRouter([
     errorElement: <AppErrorBoundary />,
     children: [
       { index: true, element: <HomePage /> },
+      { path: 'products', element: <ProductsPage /> },
+      { path: 'products/:slug', element: <ProductDetailPage /> },
       { path: 'system', element: <SystemStatusPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],

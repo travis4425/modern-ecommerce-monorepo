@@ -284,6 +284,31 @@ Cả ba đều nổ lúc `pnpm typecheck`, không đợi tới lúc người dù
 lập trình viên đọc log — nó có thể chứa tên bảng, tên cột — nên không bao giờ đem hiển
 thị. `useErrorMessage()` là cửa duy nhất đổi lỗi thành câu người đọc được.
 
+## Hành trình khách vãng lai
+
+Trang chủ → danh mục → danh sách có lọc → chi tiết sản phẩm. Không cần đăng nhập.
+
+**URL là nguồn sự thật duy nhất của bộ lọc.** Không có state song song trong component.
+Đổi lấy ba thứ mà giữ state riêng không bao giờ có: nút Back lùi đúng một bước lọc, dán
+link cho người khác thì họ thấy đúng kết quả đó, và F5 không mất gì. Cái giá là mọi thứ
+đều là chuỗi — nhưng backend cũng nhận chuỗi, nên không có bước chuyển kiểu nào bị bỏ lỡ.
+
+Vài chi tiết dễ bỏ qua nhưng người dùng cảm nhận được ngay:
+
+- Đổi bộ lọc luôn quay về trang 1. Không làm thì đang ở trang 5, lọc lại còn 2 trang, và
+  danh sách rỗng dù rõ ràng có kết quả.
+- Ô tìm kiếm hoãn 350 ms; `keepPreviousData` giữ lưới cũ mờ đi trong lúc tải trang mới
+  thay vì cho nó biến mất rồi hiện lại, nên trang không nhảy.
+- Khung xương có ĐÚNG kích thước thẻ thật, nên không giật khi dữ liệu về.
+- Ảnh hỏng rơi về ô nền có chữ cái đầu, không để trình duyệt vẽ biểu tượng ảnh vỡ.
+- 404 của một sản phẩm là câu trả lời hợp lệ, không phải sự cố: hiện lối về danh sách
+  chứ không hiện nút "thử lại" mà bấm bao nhiêu lần cũng vẫn 404.
+
+**Tiền là chuỗi cho tới đúng bước vẽ ra màn hình.** `formatMoney` là nơi duy nhất đổi
+sang `number`, và nó an toàn vì `numeric(12,2)` tối đa 10 chữ số phần nguyên, còn số
+nguyên an toàn của JavaScript là 2^53. Nếu cột tiền nới rộng hơn, chỗ đó phải đổi sang
+thư viện decimal — ràng buộc được ghi ngay trong file.
+
 ## Quy ước commit
 
 Dự án dùng [Conventional Commits](https://www.conventionalcommits.org/), được `commitlint` kiểm tra tự động qua Git hook.
@@ -308,7 +333,7 @@ scope: api | web | shared | db | auth | catalog | cart | order | admin | infra |
 | 4b    | CRUD admin sản phẩm/danh mục, nhật ký thao tác     | ✅ xong    |
 | 4c    | Upload ảnh sản phẩm (đĩa hoặc Cloudinary)          | ✅ xong    |
 | 5     | Bộ khung frontend, design tokens, i18n             | ✅ xong    |
-| 6     | Hành trình khách vãng lai                          | ⏳         |
+| 6     | Hành trình khách vãng lai                          | ✅ xong    |
 | 7     | Auth frontend, hợp nhất giỏ hàng, hồ sơ            | ⏳         |
 | 8     | Checkout, coupon, transaction đặt hàng             | ⏳         |
 | 9     | Lịch sử đơn, huỷ đơn, đánh giá                     | ⏳         |

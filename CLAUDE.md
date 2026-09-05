@@ -155,6 +155,22 @@ Mã lỗi mới phải thêm vào `packages/shared/src/constants/error-codes.ts`
   và trỏ `UPLOAD_DIR` vào thư mục tạm; `test-environment.test.ts` khẳng định lại
   cả hai. Không có chốt này, một lần `pnpm test` trên máy có cấu hình thật sẽ rải
   ảnh rác lên tài khoản đó.
+- **`count` là TỪ KHOÁ của i18next.** Nó lái việc chọn dạng số nhiều nên bắt buộc
+  là `number`; truyền chuỗi đã định dạng theo locale (`'1.234'`) là lỗi kiểu. Đặt
+  tên biến nội suy khác: `total`, `quantity`, `reviews`.
+- **Đừng chú thích kiểu rộng cho mảng chứa khoá dịch.** `Array<{ labelKey: string }>`
+  nới khoá về `string` và toàn bộ ràng buộc của `t()` biến mất đúng ở chỗ cần nhất.
+  Dùng `as const satisfies ReadonlyArray<...>`.
+- **Đồng bộ state từ prop thì CHỈNH TRONG LÚC RENDER, không dùng `useEffect`.**
+  Mẫu đúng: giữ thêm một state `seen*` làm mốc, `if (prop !== seen) { setSeen(prop);
+setState(prop) }`. Effect chạy sau khi trình duyệt đã vẽ nên giá trị cũ nhấp nháy
+  một khung hình, và `react-hooks/set-state-in-effect` chặn thẳng.
+- **Ghi vào `ref.current` trong lúc render cũng bị chặn** (`react-hooks/refs`). Nếu
+  cần một callback ổn định trong mảng phụ thuộc thì bọc `useCallback` ở PHÍA GỌI,
+  đừng lách bằng ref.
+- **Bộ lọc lấy URL làm nguồn sự thật duy nhất**, không giữ state song song. Và đổi
+  bộ lọc thì luôn `delete('page')` — đang ở trang 5 mà lọc lại còn 2 trang sẽ ra
+  danh sách rỗng dù rõ ràng có kết quả.
 - **`eslint-plugin-react-hooks` v7: chỉ nhánh `configs.flat.*` là flat config.**
   `configs['recommended-latest']` vẫn ở định dạng eslintrc (`plugins` là mảng
   chuỗi) và ESLint 9 từ chối chạy với thông báo không nói rõ nguyên nhân.
